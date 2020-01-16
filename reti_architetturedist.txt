@@ -137,3 +137,19 @@ server concorrente -> più richieste gestite contemporaneamente
 
 
 ______________________________________________________________________________
+
+SISTEMI DI NOMI
+
+Trasparenti -> non legano il nome logico alla risorsa FISICA
+Es. www.google.come
+
+Non Trasparenti -> legano il nome logico alla risorsa FISICA
+Es. 127.x.x.x
+
+BINDING STATICO vs. DINAMICO
+Binding è il legame tra la risorsa logica (nome) e la risorsa fisica (target) e che
+permette di risolvere il riferimento e trovare il target
+
+Come si qualificano i nomi e quando si risolvono i riferimenti ?
+statico: i riferimenti risolti prima della esecuzione
+dinamico: i riferimenti risolti solo al momento del bisogno e durante l’esecuzione
