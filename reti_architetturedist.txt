@@ -1,0 +1,139 @@
+PROTOCOLLO --> insieme di regole e procedure cui ci si deve attenere
+in determinate attività per una corretta esecuzione (es. galateo)
+
+UNIX --> affermato come stardard negli applicativi e architetture distribuite
+per la sua gestione dei file, processi pesanti, concorrenza.
+Mentre non si afferma uno standard per quanto riguarda la comunicazione
+mediante thread (o processi leggeri) in quanto non garantiscono portabilità e
+durabilità.
+
+
+---------------------------------------------MODELLO CLIENT SERVER-----------------------------------------------------------------
+
+DEF. protocollo di coordinamento tra due entità che cooperano per una comunicazione o la realizzazione di un servizio.
+
+Modello distribuito, a default:
+
+    1) SINCRONO --> prevista una risposta a fronta di una richiesta del client (SEMANTICA)
+    2) BLOCCANTE --> il client attende fino a quando non riceve una risposta da parte del server
+    3) ASIMMETRICO --> cliente conosce il server a cui farà la richiesta ma il server non è tenuto a conoscere tutti i suoi possibili
+                       clienti a priori
+    4) DINAMICO --> binding tra C/S avviene in maniera dinamica, a fronte di richieste diverse potrei ottenere risposte da server diversi
+    5) MODELLO 1-N (MOLTI A UNO) --> 1 server e N client
+
+La realizzazione del server è la più complessa in quanto deve essere sempre pronto ad eventuali richieste (demone), e a diversi problemi 
+di concorrenza, sicurezza ecc... (in un modello reale)
+
+
+______________________________________________________________________________
+
+CLIENT
+
+Focalizzando il client possiamo affermare che lavora in modo sincrono bloccante.
+Se la risposta non arriva dopo un certo periodo di tempo?
+Non posso considerare OUT il server in quanto potrebbe banalmente essere congestionato dalle molteplici
+richieste effettuate dai vari client.
+
+Per quanto tempo aspetta il client? 
+In teoria aspetta per sempre una risposta da parte del suo server, nelle realizzazioni per ovviare al problema di eventuale
+crash del server viene settato un intervallo di tempo (TIMEOUT) terminato il quale viene sollevata un eccezione che andrà gestita a seconda
+del contesto in cui ci troviamo (ripeto? muori? riporto all'utente?)
+
+La gestione delle eccezioni, allo scadere del timeout è locale e dipende dalla policy implementata nella logica del client
+(aspetto? richiedo a qualcun'altro? richiedo allo stesso? quante volte? ogni quanto?)
+
+
+
+_______________________________________________________________________________
+
+MODELLO DI INTERAZIONE 
+
+PULL => normale cliente servitore, il client decide quando ripetere la richieste ogni quanto e quante volte.
+(server semplificato) --> iniziativa è sempre presa lato client.
+
+PUSH => il client fa un richiesta una volta sola e attende una risposta ma non si blocca, nel frattempo può dedicarsi a fare altro
+(questo approccio scarica il client, carica il server facendolo diventare cliente di ogni client, si deve impegnare a consegnare una risposta).
+
+______________________________________________________________________________
+
+
+MODELLO A DELEGAZIONE
+
+Viene delegata la funzionalità di ricezione del risultato ad un entità che opera al posto del responsabile (PROXY)
+Quindi abbiamo necessariamente 3 entità.
+Vantaggio: si scarica la complessità del client
+Svantaggio: si introduce overhead lato server poichè esso deve conoscere tutti i proxy
+
+
+__________________________________________________________________________________________________
+
+MODELLO A SCAMBIO DI MESSAGGI (PUB-SUB)
+3 entità: PUB, SUB, GESTORE
+Sub si registra al gestore, Pub genera gli eventi e li pubblica sul gestore e il gestore si incarica di fornire una push a 
+tutti i sub registrati
+
+______________________________________________________________________________
+
+MODELLO AD AGENTI MULTIPLI
+Schema in cui i servizi sono forniti dal coordinamento di più servitori
+detti AGENTI che forniscono un servizio globale unico
+Es. MAIL (agenti di posta MTA)
+
+_____________________________________________________________________________________________________
+
+TIPOLOGIE DI INTERAZIONI C/SCAMBIO
+
+CON CONNESSIONE -> si stabilisce un canale virtuale di comunicazione, scambio dati, chiusura CONNESSIONE
+Vantaggi: affidabilità, qualità, non ho perdita di informazione, dati ordinati e non replicati
+Svantaggi: costo dell'instaurazione della CONNESSIONE
+Es: TCP
+
+SENZA CONNESSIONE -> scambio messaggi isolati, non ho interesse sulla qualità
+Vantaggi: costo minore (no CONNESSIONE)
+Svantaggi: qualità non garantita
+Es: UDP
+
+______________________________________________________________________________
+
+
+INTERCONNESSIONE FISICA
+
+connessione (OSI)
+Tutti i messaggi seguono la stessa strada (route) per la coppia mittente
+destinatario decise staticamente e impegnano risorse intermedie
+
+senza connessione (IP)
+I messaggi possono seguire strada diverse decise dinamicamente e
+non impegnano staticamente risorse intermedie
+
+______________________________________________________________________________
+
+
+IMPLEMENTAZIONE:
+
+1) VISIBILITA'
+modello globale -> non vi è restrizione alle interazioni (NON SCALABILE!!!)
+modello locale -> vi sono limiti all'interazione (parzialmente scalabile)
+
+2) STATO 
+Che cos'è? Risposta: lo stato è una sintesi memorizzata da una delle parti di come
+la comunicazione sta andando avanti.
+
+server stateless -> non si tiene traccia dello stato, ogni messaggio è indipendente e auto contenuto (messaggi più pesanti)
+Vantaggi: affidabile in caso di guasti e più leggero
+Svantaggi: lo stato deve essere mantenuto da ogni client
+Es. rc=read(filename, from, buffer, howmany);
+
+server stateful -> si mantiene lo stato, un messaggio può dipendere dai precedenti, si ha garanzia di ripristino in 
+caso di problemi (es. TCP)
+Vantaggi: garantisce efficienza, messaggi più contenuti, migliore velocità di risposta
+Svantaggi: è il server che si incarica di mantiene lo stato
+Es. 10 clienti chiedono apertura file -> 10 IOpointer
+
+3) CONCORRENZA 
+server sequenziale -> richieste gestite UNA PER VOLTA, le altre accodate
+server concorrente -> più richieste gestite contemporaneamente 
+    parallelo -> per ogni richiesta viene generato un figlio a cui si delega la gestione
+
+
+______________________________________________________________________________
