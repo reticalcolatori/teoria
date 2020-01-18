@@ -139,6 +139,9 @@ server concorrente -> più richieste gestite contemporaneamente
 ______________________________________________________________________________
 
 SISTEMI DI NOMI
+Un sistema di nomi è una struttura dati che tiene traccia dell'allocazione dei servizi.
+Risponde alla domanda: su quale nodo (macchina) trovo il servizio x?
+Risolve tutti i nomi dei servizi che si sono registrati e risponde a tutti i client che ne fanno richiesta
 
 Trasparenti -> non legano il nome logico alla risorsa FISICA
 Es. www.google.come
@@ -147,9 +150,35 @@ Non Trasparenti -> legano il nome logico alla risorsa FISICA
 Es. 127.x.x.x
 
 BINDING STATICO vs. DINAMICO
-Binding è il legame tra la risorsa logica (nome) e la risorsa fisica (target) e che
+Binding: legame tra la risorsa logica (nome) e la risorsa fisica (target) e che
 permette di risolvere il riferimento e trovare il target
 
 Come si qualificano i nomi e quando si risolvono i riferimenti ?
-statico: i riferimenti risolti prima della esecuzione
+statico: i riferimenti risolti prima della esecuzione 
+(rigido e inflessibile, tipico dei sistemi concentrati)
 dinamico: i riferimenti risolti solo al momento del bisogno e durante l’esecuzione
+(tipico dei sistemi distributit)
+
+Sistemi di nomi globali
+Devono prevedere un'architettura che permetta fattibilità ed efficienza, inoltre deve esserci la possibilità
+di aggiungere nuove entità durante l'esecuzione
+Partizionati: limite nella memorizzazione, partiziono la tabella e ho una serie di gestori che si coordinano tra loro
+Replicati: in caso di crash di uno di essi, gli altri possono fare fronte alle sue richieste
+
+______________________________________________________________________________
+
+OSI X.500 (o Directory)
+Standard definito da CCITT (in collaborazione con ISO).
+E' un protocollo di livello applicativo.
+E' un sistema di nomi che basa l'organizzazione dei nomi che può risolvere mediante gli attributi
+di questi ultimi
+Realizzazione: partizionata, decentralizzata, disponibile 24/7
+La ricerca sul direttorio è realizzata mediante collaborazione tra agenti (come nel DNS)
+
+Funzionamento:
+I DUA sono gli agenti con i quali il client si deve interfacciare per raggiungere il DSA.
+I DSA collaborano tra loro per risolvere la richiesta mediante dei DSP.
+I DUA raggiungono i DSA mediante il protocollo DAP
+
+______________________________________________________________________________
+

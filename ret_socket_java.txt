@@ -1,0 +1,3 @@
+SOCKET (JAVA)
+
+Obiettivo: fornire delle API standard per la comunicazione C/S 
