@@ -1,0 +1,151 @@
+﻿--SLIDE SERVIZI INTERNET--
+
+Diffusione internet: dovuta ad una nuova offerta di servizi che ha invogliato clienti già agganciati e nuovi clienti:
+- stampa remota, terminale remoto, ftp (C/S due entità)
+- mail, news, dns (infrastruttura distribuita)
+
+Protocolli standard: telnet, ftp, tftp, smtp, nntp, lpdp, dns, http.
+Protocolli solo UNIX: rsh, rwho, rlogin...
+
+Proprietà fondamentali delle implementazioni
+- trasparenza alla allocazione(o meno)
+- modello C/S (con stato o meno)
+- standardizzazione
+
+--------------------------------------------------------------------------------
+
+Virtual terminal: telnet (TCP/IP) e rlogin (UNIX).
+
+TELNET 
+Obiettivo: nasce per gestire eterogeneità di sistemi operativi e hardware, il terminale locale diventa un terminale sul e del sistema operativo remoto.
+
+Caratteristiche
+- comunicazione simmetrica con funzioni distinte complementari, e differenziate
+- gestione dell'eterogeneità tramite terminale virtuale
+- negoziazione dinamica delle opzioni di collegamento tra C/S
+
+Telnet client
+1) stabilisce una connessione TCP, accetta i caratteri (dall'utente) e li manda al server 
+2) accetta i caratteri in risposta dal server e li visualizza
+
+Telnet server
+1) creazione demone per gestione richieste servizio
+2) generazione figlio per gestione singole sessioni
+
+Problema: ETEROGENEITA' DEI TERMINALI
+Possono differire per: 
+- set di caratteri
+- codifica caratteri
+- lnghezza linea e pagina
+- tasti funzione (escape sequence)
+
+Soluzione: definizione di un unico terminale virtuale condiviso standard: NETWORK VIRTUAL TERMINAL (NVT). In corrispondenza di ogni stazione di lavoro si effettuano la conversione da terminale locale a terminale standard virtuale.
+
+Implementazione NVT
+- 7 bit USASCII (si può cambiare durante negoziazione dinamica)
+- unica connessione: controllo in banda!! Invio di caratteri di controllo e funzioni di controllo insieme con i dati normali.
+- negoziazione del terminale: possibile ad inizio connessione sia successivamente per decidere: half-full-duplex, tipo di terminale, codifica 7-8 bit. 
+- negoziazione SIMMETRICA. Richieste negative DONT e WONT sempre accettate.
+- Possibilità di buffer a linea (OneLineAtaTime invece che OneCharAtaTime di default) con relativi ritardi(linemode).
+- uso di dati urgenti
+
+Implementazione a pseudo-terminal: il terminale viene implementato al livello di applicazione come dispositivo che si comporta come un dispositivo reale, semplificando i/o e controlli ma aumentando inefficienze.
+
+--------------------------------------------------------------------------------
+RLOGIN
+
+Definizione: servizio di login remoto su un'altra macchina UNIX
+
+Caratteristiche: molto più snello di telnet ma con prestazioni limitate e non ottimizzate. Utilizza una connessione TCP/IP e due processi per parte, lavora con un solo carattere alla volta. Problema di sicurezza perchè lavora senza password ma con "utenti fidati" contenuti nel file .rhosts e /etc/hosts.equiv e tutti i dati (password) sono in chiaro.
+
+Client: crea una connessione TCP al server
+Server: il padre gestisce i caratteri in arrivo dal client, il figlio gestisce i caratteri in uscita da restituire al client (disaccoppiamento dati)
+
+--------------------------------------------------------------------------------
+
+TRASFERIMENTO FILE
+
+2 protocolli: ftp (usa TCP) e tftp (usa UDP)
+
+FTP
+Caratteristiche:
+- controllo identità: login e password per controllo accesso
+- esecuzione a livello applicativo o con accesso interattivo utente: si può fare ls, get, put, mkdir, mget, mput,... 
+- Specifica differenziata del formato dei dati: file di tipo testo o binario.
+
+Tutte le informazioni viaggiano in chiaro e sono espresse mediante una codifica numerica XXX.
+La prima cifra codifica le interazioni.
+La seconda cifra codifica le risposte.
+La terza cifra specifica più precisamente.
+
+%%%%%%%%%%%%%%%%%%% AGGIUNGERE PIPPONE SU CODIFICA NUMERICA %%%%%%%%%%%%%%%%%%%%
+
+FTP anonymous
+Usato per condividere informazioni. Normalmente i server FTP chiedono di default che l’utente inserisca i propri dati di login per effettuare l’upload/download dei file. Molti servizi di web host offrono però un servizio addizionale: l’FTP anonimo. Di cosa si tratta? Questo servizio offre la possibilità agli utenti di loggarsi sul server FTP senza inserire password e utilizzando l’username “anonimo”.L’utente anonimo può scaricare file pubblici, ma potrebbe non essere in grado di effettuare l’upload.
+
+Vi sono 2 connessioni in atto:
+- una di controllo (porta 21) che dura tutta la sessione, il processo figlio gestore viene creato all'inizio sessione, uso di NVT e di codici XXX interazioni, risposte, specifica la seconda cifra) 
+- una dati (porta 20) che possono essere più di una per sessione in realtà, il processo viene creato al momento del bisogno, ci sono la modalità attiva e passiva.
+
+Possibilità di stato del trasferimento: se devo trasferire file molto grande e connessione salta, riprendo da un checkpoint.
+
+Come si instaura la connessione (di controllo) ?
+- Iniziativa del cliente o cliente attivo: il client esegue la connect anche per la connessione dati, il server deve essere già in listen.
+- Iniziativa del server (server attivo) o cliente passivo: il client esegue la listen e fa una accept sulla sua porta, il server deve fare solo la connect
+
+--------------------------------------------------------------------------------
+
+E-MAIL (RFC 822)
+Servizio ASINCRONO, che permette lo scambio di messaggi tra utenti.
+
+Caratteristica fondamentale
+Il mittente non aspetta il destinatario (SPOOLING), l'email viene presa in carico da un servizio di spooling. (I messaggi possono essere semplici testi o anche interi file)
+
+email dati e protocollo
+Caratteristica: standard semplice e LEGACY.
+Messaggi divisi in:
+- Header: from,to date, subject;
+- Opzionali: cc, bcc, replay-to, message-id.
+- Corpo: testo in formato ASCII PURO.
+
+MIME (Multipurpose Interchange Mail Extension): è uno standard di internet che estende la definizione del formato dei messaggi di posta elettronica. Serve a inserire formati diversi in unico messaggio: caratteri speciali, ma anche binari come testo(TEXT/PLAIN), foto(IMAGE/JPG) video, altre email(MESSAGE/RFC822), etc.
+
+Possibili problemi di indirizzamento nelle mailing list
+ciclo senza fine A -> B -> A...
+
+Architettura mail
+Uso di modello ad agenti:
+- user agent (UA), contiene le in/out box degli utenti e si interfaccia con gli utenti
+- mail tranfert agent (MTA), si tratta del router non visibili dall'utente, solo da UA. Trasferiscono mail dall' UA sorgente a quello di destinazione.
+
+UA e MTA sono indipendenti tra loro e replicati.
+
+Ciclo di trasferimento mail
+Il processo UA in background diventa il cliente della attività MTA che:
+- mappa il nome della destinazione in indirizzo IP o di intermediario 
+- tenta la connessione TCP con il mail server successivo o di destinazione 
+- se OK, copia un messaggio al successivo passo  
+
+Routing tra MTA
+Si può basare su:
+- nomi di DNS (vedi campo MX)
+- altri cammini e percorsi
+
+Protocolli tra entità
+Uso di SMTP (porta 25) per comunicazione tra MTA e UA e MTA e MTA.
+Uso di POP3, IMAP tra UA e utente finale.
+Uso di diversi lettori di posta elettronica (eudora, outlook, etc.) per visualizzazione messaggi.
+
+SMTP 
+Simple Mail Transfer Protocol (RFC 821)
+E' il protocollo standard per il trasferimento della mail tra mailer (MTA) che si connettono e scambiano messaggi di posta in chiaro
+
+Usenet News
+News scambiate tra un insieme di comunità divise per interesse (topic). Permette di partecipare alla discussione scambiando informazioni tra utenti.
+Utilizza il protocollo NNTP.
+
+NNTP
+Network News Transfer Protocol (port 119)
+
+Propagazione come le onde: paradosso temporale: prima risposta, poi domanda. Il tempo è una variabile locale non utilizzabile per coordinare i processi. Uso del protocollo NNTP (119).
+

@@ -1,3 +1,6 @@
 SOCKET (JAVA)
 
 Obiettivo: fornire delle API standard per la comunicazione C/S 
+
+Socket Datagram:
+si basa su IP a livello Network e UDP a livello Transport

@@ -1,0 +1,226 @@
+﻿--SLIDE OSI--
+
+OSI (Open system Interconnection)
+
+Definizione: standard di comunicazione tra sistemi aperti che permette a sistemi diversi di interoperare ossia consente la comunicazione tra sistemi etereogenei in modo aperto.
+
+Caratteristiche
+- permette di controllare coordinare e monitorare sistemi eterogenei interconnessi a distanza senza porre limiti di località e di coresidenza, garantendone una gestione efficiente
+- standard ampio, adottato dalle specifiche internazionali e obbligatorio negli enti di comunicazione relativi
+- standard teorico, che propone standard e schemi di progetto astratti
+- organizzato a livelli, interamente ad oggetti, astratto e senza legami con realizzazioni, ha uno scenario ampio di riferimento per le soluzioni
+
+Comitati internazionali: ISO, IEC, CCITT.
+Organizzazioni industriali per la standardizzazione: ECMA, IEEE, EIA.
+
+Architettura
+Propone un'archiettura di soluzione per arrivare a descrivere una comunicazione ICT complessa.
+Si basa sul PRINCIPIO DELL'ASTRAZIONE che richiede di nascondere dettagli e mostrare solo le intità utili all'utente finale.
+Permette di risolvere problemi complessi separando gli ambiti in una serie livelli, in modo da decomporre il problema.
+
+Visione verticale: servzio.
+Visione orizzontale: protocollo.
+
+Prevede 7 livelli:
+Applicazione    }
+Presentazione   } LOGICO
+Sessione        }
+Trasporto
+Network         }
+Data Link       } FISICO
+Fisico          }
+    
+Il trasporto separa parte logica e parte fisica.
+Ogni livello comunica con il pari tramite un PROTOCOLLO, ossia un insieme di passi che realizza usando il SERVIZIO sottostante. L'implementazione è legata alla specifica del protocollo. 
+Ogni livello fornisce un servizio disponibile al livello superiore. La definizione del servizio è legata lla sua semantica.
+I livelli sono PRESCRITTIVI, non possono essere bypassati, ma vanno attraversati in modo ordinato.
+Maggiore è la complessità, più opportuni sono i livelli.
+
+--------------------------------------------------------------------------------
+
+SDU/IDU (Service Data Unit/Interface Data Unit): unità di informazione del servizio. Viene specificata dal livello e utilizzato dal livello superiore per la comunicazione intralivello seguendo l'INTERFACCIA.
+PDU (Protocol Data Unit): unità di informazione del protocollo. Viene specificata nel protocollo e viene utilizzato per la comunicazione di pari livello.
+
+Nomi ed Entità in OSI: ogni elemento viene detto *entità*. Si definisce un sistema di nomi per le entità usando le lettere. Per identificare una entità abbiamo bisogno di tutti i livelli identificativi.
+
+SAP (Serivice Access Point): identifica il punto di accesso che un servizio OSI offre al suo livello superiore. OGNI SAP deve avere un nome UNICO per essere identificato. Per identificare una entità si devono nominare tutti i SAP fino al livello 3.
+
+OSI definisce le sole specifiche di comunicazione: si evita qualunque ricopertura con termini che suggeriscano una soluzione specifica.
+Non si dice mai come i livelli del protocollo devono essere realizzati, a processi, procedure, ad oggetti, etc.
+L'organizzazione a SAP è ASTRATTA.
+
+OSI ha affrontato la sfida di definire un ‘prodotto’ a lungo ciclo di vita (idealmente infinito): i protocolli cambiano, è necessario definire standard che invece rimangano a lungo.
+
+Per garantire una copertura stabile della comunicazione, OSI specifica solo meccanismi di comunicazione.
+Le informazioni che vanno verso il basso vengono incapsulate e devono passare informazioni e comandi al protocollo.
+Spesso si introducono informazioni di protocollo nel livello sottostante (ICU, INTERFACE CONTROL INFORMATION), che potrebbero determinare anche il protocollo sottostante e costituiscono il PCI (Protocolo Control Information).
+
+--------------------------------------------------------------------------------
+
+OSI – Connessione
+
+OSI connectionless: ogni unità di dati è trasferita in modo indipendente dalle altre unità ed è autocontenuta, PDU indipendente, no QoS, no HANDSHAKE, costo limitato, dati occasionali, scarse garanzie.
+
+OSI connection oriented: si stabilisce una connessione mediante handshake (apertura-trasferimento-terminazione), garanzie, costi più elevati, PDU dipendenti, dati non occasionali, non necessariamente impega risorse sui nodi intermedi della rete.
+
+OSI - Primitive
+
+Le entità pari cooperano tramite primitive per implementare le funzionalità del livello cui appartengono:
+- data (EXPEDITED-DATA)
+- connect
+- disconnect
+
+Metodi delle primitive (forme):
+- request: richiede un servizio
+- indication: segnalazione di evento
+- response: risposta alla richiesta
+- confirm: segnalazione evento
+Se presenti tutte e quattro le forme si parla di caso sincrono.
+
+OSI vs TCP/IP Internet
+- OSI: con impegno intermedio e QoS
+- TCP/IP: solo best effort e impegno degli endpoint
+TCP/IP si ispira fortemente al modelli OSI, semplificando le proposte e proponendole alla comunità di utenti.
+
+--------------------------------------------------------------------------------
+
+Livelli Bassi OSI
+Sono i 3 livelli inferiori OSI, detti fisici, forniscono un meccanismo trasparente per il trasporto, offrono:
+- controllo errori
+- controllo flusso dei dati
+- modelli di indirizzamento per naming
+- strategie di routing
+Esempi fisici: RS232.
+Esempi datalink: Ethernet, PPP.
+
+--------------------------------------------------------------------------------
+
+Livello NETWORK
+
+Tiene conto dei nodi intermedi tra due pari.
+Si occupa di realizzare il routing tra reti diverse oltre a definire il sistema di nomi delle entità.
+
+Obiettivo: si cerca di passare le informazioni con un costo locale minimo.
+
+Compiti: routing, flow control, congestion control. 
+Obiettivi: equità di connessioni, efficenza, deadlock.
+Vale il principio di separazione: i nodi intermedi devono potere interagire solo per le funzionalità necessarie e non essere toccati a i livelli applicativi.
+
+--------------------------------------------------------------------------------
+
+Livello TRANSPORT
+
+CONNECTION-ORIENTED, separa il livello fisico e il livello logico.
+Deve considerare sia gli endpoint sia i nodi intermedi per effettuare la connessione con qualità.
+
+Durante la CONNECT si mette in gioco molte entità perché consideriamo tutti i nodi intermedi. Il trasporto può lavorare effettuando multiplexing / demultiplexing i SAP.
+- Upward multiplexing: 3 SAP a livello trasporto sono unificati in un SAP Network (dove sotto ho poca banda utilizzo più SAP)
+- Downward multiplexing: situazione inversa
+
+Obiettivo: spedizione dati corretti, entro certi tempi, con una certa QoS
+
+Primitive: T-CONNECT, T-DATA, T-EXPEDITED-DATA, T-DISCONNECT.
+
+Dati expedited: tipo gli urgenti di TCP. Dati privilegiati soggetti a controllo di flusso separato, tipicamente per l'invio di messaggi di controllo anche se il normale flusso è congestionato.
+
+--------------------------------------------------------------------------------
+
+Livello SESSION
+
+Fornisce supporto al dialogo tra le due entità, prevedendo la possibilità che due entità che comunicano possano essere molto eterogenee.
+
+Caratteristiche
+- dialogo bidirezionale
+- dialogo molteplice strutturato in attività separate e diverse
+- vengono sempre considerate le risorse impegnate
+- si vuole avere garanzie di correttezza e affidabilità
+
+Obiettivo: standardizzare una serie di componenti per avere a disposizione tutte le funzionalità necessarie secondo i requisiti
+
+Servizi aggiunti per gestione dell'interazione
+- gestione interazione (half, full, simplex)
+- sincronizzazione (checkpoints e roll-back, quelli maggiori sono bloccanti, quelli minori sono non bloccanti, ma in seguito avremmo sicuramente un maggiore dopo una finestra di punti SLIDING WINDOW) e eccezioni. (AGGIUNGERE APPUNTI)
+
+Prevede 58 primitive raggruppate in 14v diverse unità funzionali.
+
+TOKEN: gettoni di autorizzazioni capacità di fare azione. (AGGIUNGERE APPUNTI)
+
+--------------------------------------------------------------------------------
+
+Livello PRESENTATION
+
+Problema: la codifica delle informazioni non è univoca e ogni pari può usare codifiche diverse.
+
+Obiettivo: offrire una corretta interoperabilità sui dati, superando il problema della codifica dei dati, normando gli strumenti e i protocolli necessari per gestire i dati eterogenei nei sistemi aperti.
+
+Affronta tutto il problema della rappresentazione dei dati, le differenze naturali tra i sistemi che comunicano, ma anche casi di necessità di codifiche ad hoc per compressione (efficienza) e crittografia (sicurezza).
+Il livello di presentazione stabilisce come negoziare e definire una base comune per la rappresentazione e l'accordo sui dati.
+
+Soluzioni per dati diversi
+- dotare a tutti i nodi di tutte le funzioni di conversione. E'sicuramente efficiente ( N*(N-1) funzioni), ma sicuramente dalla difficile implementazione poichè poco scalabile.
+- creare un formato comune di rappresentazione dei dati. Ho un numero minore di funzioni di conversione. N funzioni dal formato locale e N dal formato comune in totale. SI USA SEMPRE LA SECONDA SOLUZIONE!!!
+
+Casi diversi: se c'è uniformità nessuna trasformazione (es.JVM).
+Altrimenti bisogna tenerne in conto nel progetto:
+- se c'è accordo definiamo a priori unico formato intermedio standard
+- se non c'è accordo allora bisogna fare una negoziazione sul linguaggio comune (accordo ASTRATTO) e sui dati (accordo CONCRETO) 
+
+Accordo CONCRETO
+C'è quindi bisogno di un linguaggio di descrizione dei dati, ad esempio:
+- valore 
+- lunghezza e valore
+- tipo lunghezza e valore.
+Se si trova un accordo comunque si ha ridondanza.
+
+Accordo ASTRATTO
+Bisogna definire:
+- contesto di comunicazione
+- soggetto della comunicazione
+- la semantica delle informazioni
+- informazioni vere e proprie 
+per poi comunicare in concreto. 
+
+BIDDING (contract net) protocollo di negoziazione:
+1) il sender fa un broadcast della propria esigenza (Announce) 
+2) i receiver fanno un'offerta (bid) 
+3) il sender sceglie tra i bid del receiver
+4) il receiver accoglie l'ok definitivo, potrebbe rifiutare (contract)
+5) Accordo
+
+Si può rifiutare e ripartire dalla 3 o dalla 1. SELEZIONE FLESSIBILE MA COSTOSA poichè mi permette di negoziare ma ho un numero di fasi non predicibile.
+
+--------------------------------------------------------------------------------
+
+
+Protoocolli di presentazione
+
+ASN.1 (Abstract Syntax Notation)
+Linguaggio astratto di specifica per la parte astratta dell'accordo.
+Usato in caso di bisogno per descrivere dati accordandoci su cosa vogliamo comunicare e fare una negoziazione.
+
+BER (Basic Encoding Rules)
+Linguaggio concreto di descrizione per la parte concreta dell'accordo.
+Triple Tag-Length-Value: codifica a discesa ricorsiva. (vedi slide)
+Usato per stabilire quale sia il formato comune dei dati da trasferire. NON DESCRIVE LE ISTRUZIONI.
+
+--------------------------------------------------------------------------------
+
+Livello APPLICATION
+
+Si interfaccia con l'utente finale.
+
+Obiettivo: ASTRAZiONE, nascondere la complessità dei livelli sottostanti coordinando le applicazioni distribuite.
+
+Esempi: MHS, X.500, X.700, FTAM, VT(Virtual Terminal Standard), DTP.
+
+OSI adotta un approccio particolare basato sul modello ad OGGETTI per la specifica delle applicazioni:
+- uso di template e package per definire oggetti
+- pura ereditarietà statica tra astrazioni
+- Oggetti da manipolare come interfaccia ed espressi attraverso l'uso di package
+
+Unicità dei nomi tramite X.500.
+
+Servizi X.500: il servizio di direttorio consente di collocare e classificare ogni entità in base al contenuto degli attributi in un sistema gerarchico.
+Uso di ID univoco ad albero.
+
+Limiti TCP/IP rispetto a OSI: TCP definito approssimativamente negli RFC. Prevede protocolli e implementazioni insieme (vincolo!).

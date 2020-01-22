@@ -1,0 +1,123 @@
+﻿--SLIDE SISTEMI DI NOMI--
+
+Sistemi di nomi proprietà: 
+- Generalità: varietà dei nomi trattati
+- Definizioni multiple della stessa entità.
+- Distribuibilità: uso di partizioni e/o replicati. 
+- User-friendly: nomi facili per l'utente.
+
+Problema fondamentale: nel distribuito sorge la necessità di ritrovare le altre entità del sistema.
+Entità eterogenee --> livelli diversi di nomi, con contesti di visibilià.
+Nomi esterni per l'utente come stringa di caratteri, nomi interni per il sistema come un numero binario.
+Le entità sono spesso associate a DIVERSI sistemi di nomi (utente o sistema).
+
+Livelli di Nomi:
+- Nome (logico esterno): denota l'entità.
+- Indirizzo (fisico): specifica dove si trova l'entità e lo riferisce dopo un     binding.
+- Route (organizzazione per la raggiungibilià): specifica come raggiungere l'entità.
+
+Nomi scelti dall'utente, indirizzi assegnati dal sistema. L'utente deve specificare i nomi e trovare la route.
+
+--------------------------------------------------------------------------------
+
+Spazio di nomi
+- Flat: nessuna struttura, adatto a casi specifici, con pochi utenti e poche entità, problemi in caso di molte entità.
+- Partizionato: gerarchia e contesti (DNS), ogni responsabile di partizione consegna i nomi. 
+- Descrittivo: con riferimento ad una struttura di oggetto caratterizzato da attributi per identificare la entità corrispondente (X.500). 
+Ogni nome può identificare anche una molteplicità di enità che si possono trovare solo con una ricerca esaustiva sul sistema di nomi.
+- Nome di gruppo identifica una lista di nomi di entità: problema simile al multicast. IP classe D: le entità possono essere anche molto lontane e poco correlate. (Necessità di una infrastuttura di supporto al gruppo)
+
+In un servizio di nomi i clienti del name server sono:
+i) i clienti che devono risolvere un nome per poter riferire una risorsa.
+ii) Le entità risorse che devono rendersi note al servizio e diventano clienti. 
+
+Il suppporto deve considerare anche
+- comunicazione concorrente
+- altri name server (replicati/partizionati)
+- gestione dei nomi veri e propri (coordinamento)
+- gestione tabelle e coordinamento (ottimizzado localmente).
+
+Name server
+Obiettivo: fornisce operazioni per consentire operatività sulle tabelle di corrispondenza modellate come tuple di attributi.
+
+Operazioni name server
+- query
+- addtuple
+- modify/delete tuple
+- enumerate
+
+Ogni sistema di nomi decide il formato delle tuple e il formato specifico delle operazioni.
+Le realizzazioni prevedono sia unico servitore sia agenti multipli.
+Il servizio può essere centralizzato o molto spesso distribuito e replicato.
+
+Nella comunicazione tra molteplici name sterver è necessaria una comunicazione tra loro: usando datagrammi, connessioni, rpc.
+Il traffico tra name server deve essere supportato mentre continua a fornire il servizio.
+Il coordinamento dei servitori deve essere minimizzato intempo ed uso delle risorse.
+La gestione delle tabelle e il coordinamento creano problemi di consistenza e affidabilità, complicato dalla replicazione.
+
+--------------------------------------------------------------------------------
+
+Gestione dei nomi
+Nella gestione sono fondamentali due decisioni:
+- distribuzione dei nomi
+- risoluzione dei nomi
+
+La distribuzione avviene tramite oggetti che ne hanno responsabilità o autorità con un partizionamento tra i server responsabili con politiche di clustering di vario genere: hash table, pattern matching, tuple. 
+
+Per la risoluzione  dei nomi le richieste dal cliente devono fluire fino al server che può dare la risposta.
+Vi sono 3 fasi:
+1) trovare l'autorità corretta
+2) erificare le autorizzazioni all'operazione
+3) eseguire l'operazione
+
+Per limitare i costi: cache, politiche route tra server, creazione di contesti o vicinati tra server, propagazione di conoscenza tra i vicini.
+
+--------------------------------------------------------------------------------
+
+X.500
+
+Definizione CCITT: collezione di sistemi aperti che cooperano per mantenere un database logico di informazioni sgli oggetti del mondo reale. Gli utenti possono leggere o modificare l'informazione solo se hanno i privilegi necessari.
+
+Che cos'è?
+E'un insieme di standard di nomi, articolato e completo.
+La base è la struttura a directory, organizzate in un albero logico detto Directory Information Tree (DIT) a formare il Directory Information Base (DIB).
+L'albero logico è costituito in base al valore di attributi del tutto liberi e a scelta dell'utente.
+
+Cosa lo distingue?
+La novità sta nella organizzazione basata sui contenuti e le ricerche che si possono fare in modo molto flessibile per singola entità o per attributo ritrovando gruppi i elementi anche molto numerosi. (sotto alberi e foreste)
+
+Ogni entry o nodo si ritrova attraverso diverse notazioni:
+- Distringuished Name(DN): identifica univocamente l'oggetto all'interno del DIT – Relative Distinguished Name(RDN): che definisce univocamente un oggetto all'interno di un contesto. 
+
+DN può fungere da chiave per identificare univocamente un nodo.
+Le informazioni o attributi dei nodi sono molti eterogenee: si possono descrivere organizzazioni, persone beni patrimoniali, risorse geografiche etc.
+
+Filtri: sono molti potenti come capacità espressiva poichè permettono condizioni logiche sugli attributi, espressioni regolari e condizioni aritmentiche.
+
+
+La ricerca in X.500 avviene attraverso
+- AGENTI: DUA (Directory User Agent), DSA (Directory System Agent)
+- PROTOCOLLI: DSP (Direcory System Protocol), DAP (Directory Access Protocol) 
+
+LDAP (Lightweight Directory Access Protocol): protocollo di accesso al direttorio leggero compatibile con internet, usato per infrastrutture di verifica certificati.
+
+Qual è il ciclo di ricerca?
+Program/User-->DUA--(DAP)-->DSA--(DSP)-->DSA--(DAP)-->DUA-->Program/User
+
+Obiettivo di un directory: mantenere informazioni su risorse etereogenee evitando duplicazioni e problemi di sincronizzazione.
+Al contrario di un database
+- si associano attributi anche diversi con singoli oggetti
+- gli oggetti sono indipendenti tra loro
+- relazione di contenimento
+- accesso differziato per i singoli oggetti
+- ottimizzato per un numero alto di letture e basso di scritture
+ 
+Necessità di un protocollo standard unificato per accedere alle informazioni esprimere le specifiche di accesso, ed estrarre informazioni in modo efficace.
+
+Si usano directory per:
+- ocalizzare i diversi gestori e le loro politiche
+- trattare i problemi di domini incrociati (cross-domain)
+- ritrovare le proprietà delle risorse
+- ritrovare le proprietà dei gestori delle risorse
+
+Due forme di evoluzione: Protocolli di Directory vs. Protocolli di Discovery. Directory soluzioni di nomi globali. Discovery soluzioni di nomi locali.

@@ -1,0 +1,96 @@
+﻿--SLIDE Socket in Java--
+
+SOCKET: end point locale di un canale bidirezionale.
+
+Obiettivo: consentire una comunicazione standard usando API per lo scambio di messaggi. Le API funzionano anche in un nodo locale. 
+
+La comunicazione può avvenire con differenti modalità le quali hanno una qualità e un costo diverso.
+In java è possibile utilizzare i meccanismi di comunicazione del Sistema operativo grazie ad un package java.net.
+
+Tipo di comunicazione:
+1)CON CONNESSIONE 
+socket stream 
+Livello 4: TCP
+Classi: ServerSocket, Socket(JAVA).
+
+2)SENZA CONNESSIONE 
+socket  datagram (servizio postale)
+Livello 4: UDP
+Classi: DatagramSocket (JAVA).
+
+In Java tipicamente si realizzano server sequenziali connectionless (poco soggetti a guasti) e server paralleli multiprocesso (possiamo avere più thread sullo stesso servizio → thread poco costosi).
+I monoprocesso sono difficili da realizzare in java (non in c con la select).
+
+Primo passo: identificazione reciproca dei processi (client/server) nella rete. Nome nodo + porta (diverse tra udp e tcp) forniscono un nome globale.
+Es: 137.204.59.45:25
+Il binding tra processo (PID) e nome globale è la socket. La socket viene richiamata tramite file descriptor in unix.
+
+--------------------------------------------------------------------------------
+
+SOCKET DATAGRAM
+Utilizzo: permetono a due thread di scambiarsi messaggi senza stabilire una vera e propria connessione.
+Costruttore:(ipRemoto,portaRemota).
+
+Uso per la comunicazione di: 
+1) send(DatagramPacket p): asincrona con il ricevente, da effettuare solo dopo aver preparato l'area dati e lo spazio per le informazioni di controllo del ricevente, bloccante rispetto alla driver di trasporto.
+(implica solo la consegna al kernel locale)
+
+2) receive(DatagramPacket p), sincrona rispetto alla driver di trasporto e bloccante per il ricevente, da effettuare solo dopo aver allocato spazio per ricevere tutte le info: controllo+dati.
+(basta ricevere un datagramma per sbloccare la receive)
+
+Che cosa invio?
+DatagramPacket: serve a preparare e usare datagrammi.
+Permette di specificare la parte applicativa di dati (byte[]) e di controllo (indirizzo e porta destinatario)
+
+Si può inviare un solo datagramma alla volta ad ogni altro end point dopo aver inizializzato almeno una socket.
+Nessuna garanzia di qualità.
+
+--------------------------------------------------------------------------------
+
+MULTICAST
+La comunicazione a datagrammi consente l’uso di protocolli di gruppo, inviando messaggi ad una serie didestinatari registrati ad un indirizzo di gruppo.
+(Indirizzi Classe D: 224.0.0.0 – 239.255.255.255)
+
+Classe: MulticastSocket(int port)
+
+Si fa joinGroup(InetAddress addr) per accedere ad un gruppo multicast. leaveGroup(InetAddress addr) per lasciarlo.
+La porta rende più selettiva la cosa (65k – 1024 gruppi disponibili) poichè il gruppo è formato solo dachi ha usato la stessa porta.
+
+OPZIONI SOCKET: servono ad adattare il comportamento in casi specifici
+SetSoTimeout --> rende bloccante per un certo timeout la socket
+Set(Send/Receive)BufferSize --> imposta la dimensione dei buffer
+SetReuseAddress --> collega più processi ad un certo indirizzo fisico (porta)
+
+--------------------------------------------------------------------------------
+
+SOCKET STREAM
+Utilizzo: terminale di un vero e proprio canale virtuale di connessione creato prima della comunicazione.
+
+Semantica AT-MOST-ONCE: ricezione una sola volta anche se reinvio. In caso di dati non consegnati non abbiamo molte informazioni.
+Connessione stabilita dalla quadrupla.
+
+Classi: Socket, ServerSocket (java.net)
+
+Client (Socket): il costruttore crea la socket, effettua il bind, e fa la connessione al server in modo implicito. La creazione della socket produce in modo atomico anche la connessione al server corrispondente (deve essere presente).
+La chiusura è esplicita e da effettuare ogni volta che una connessione non è più necessaria per evitare spreco di risorse.
+
+InputStrem/OutputStream: Attraverso gli stream (generici di byte) si possono spedire/ricevere solo byte, senza nessuna formattazione in messaggi,alitmenti uso di adapter stream per scrivere i tipi primitivi di java (Stringhe UTF-16).
+
+Server (ServerSocket): permette solo di accettare nuove richieste di connessione. Esiste una coda di accettazione, settabile. Quando si fa la accept (BLOCCANTE laddove non ho delle richieste) si restituisce un oggetto Socket, che forniscce l'end point con il cliente.
+
+Server parallelo: accept nel main thread: generazione di un nuovo thread che gestisce il client quando la accept si sblocca. Il main thread torna immediatamente alla accept. (La coda perde di significato)
+
+Come deve essere chiusa la connessione?
+Close: chiude le risorse locali per TUTTI i thread che stanno usando la socket. La chiusura è sempre necessaria.
+La memoria OUT viene mantenuta fino a fine invio dei dati.
+La memoria IN viene eliminata subito.
+
+La close non è "rispettosa" verso l'altra entità, poichè egli potrebbe avere ancora qualcosa da inviare.
+
+Chiusura dolce: shudownInput, shutdownOutput.
+La più indicata è la shutdown output che chiude la direzione di respondabilità.
+
+Opzioni: 
+-SetSoLinger: quando scatta il timeout viene scartata la memoria in OUT anche se 	ci sono ancora messaggi. 
+-SetTcpNoDelay: non bufferizza i messaggi e invia subito. 
+-SetKeepAlive: abilita/disabilita la funzione KeepAlive.

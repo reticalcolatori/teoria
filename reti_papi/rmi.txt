@@ -1,0 +1,29 @@
+--SLIDE RMI--
+Architettura RMI: richiedere esecuzione di metodi remoti in JAVA, restando nel paradigma OOP. Contiene strumenti politiche e meccanismi che permettono ad un'app Java di eseguire metodi di un oggetto remoto in un'altra JVM. Solo interazioni SINCRONE e BLOCCANTI. USO DI TCP.
+Riferimento: localmente si ha solo un riferimento remoto all'oggetto. L'oggetto è attivo solo nel nodo remoto. Il riferimento locale viene mantenuto da un'interfaccia che fa da CONTRATTO. Si possono avere più interfacce per oggetto. Si usano dei Proxy per nascondere le socket TCP. 
+Eterogeneità dei sistemi: grazie alla portabilità del codice java è possibile un unico ambiente di lavoro anche con sistemi eterogenei.
+Proxy: Stub (cliente) effettua le richieste allo Skeleton (servitore) che riceve la richiesta e fa la call locale: nascondono al livello applicativo la natura distribuita dell'applicazione. 
+Data la natura legacy della JVM non è possibile referenziare un oggetto remoto direttamente: necessità di una infrastruttura attiva e distribuita.
+Livelli RRL (Remote Reference Layer): gestisce i riferimenti agli oggetti remoti, parametri e delle astrazioni stream; e TL (Transport Layer): gestione delle connessioni, protocollo proprietario, sistema di nomi Registry.
+Registry: servizio di nomi a livello locale, che consente al server di pubblicare un servizio e al client di recuperarne il proxy.
+I due livelli, RRL e Transport, sono parte della macchina virtuale JVM.
+Ogni metodo dell'interfaccia che deve estendere Remote deve fare throws RemoteException. Ogni classe che implementa il contratto deve estendere l'oggetto UnicastRemoteObject.
+Utilizzo RMI: definizione interfaccia e implementazione componente. 2) compilazione e rmic 3) pubblicare sul rmi registry. 4) ottenere lato client il riferimento all'oggetto remoto tramite name service, facendo una lookup sul registry.
+Il cliente deve sapere dove è collocato il rmi registry. NON c’è trasparenza alla locazione
+Marshalling: processo di codifica degli argomenti e dei risultati per la trasmissione. Unmarshalling: processo inverso di decodifica di argomenti e risultati ricevuti.
+In java non c'è bisogno di marshalling, ma solo di serializzazione: trasformazione di oggetti complessi in semplice sequenza di byte. Non sempre è possibile.
+Passaggio dei parametri: in locale gli oggetti vengono passati per riferimento, mentre in remoto si fa una deep copy, almeno che non si tratti di oggetti remote che vanno passati per riferimento remoto.
+Il Registry è in realtà un server RMI per ragioni di economicità di implementazione e anche di principio. Si può implementare il registry dentro alla propria applicazione.
+Stub: effettua l'invocazione, gestisce la serializz. spedisce e riceve gli argomenti e il risultato. Si appoggia su RRL. Contiene il riferimento all'istanza remota.
+Skeleton: gestisce serializz. spedisce e riceve i dati appoggiandosi su RRL ed invoca il metodo richiesto (dispatching).
+Tipicamente un thread per call: necessito di lock synchronized e server thread safe. Il thread viene generato a livello JVM.
+Se esiste già una connessione tra due JVM si cerca di riutilizzarla. Di solito si utilizza fino a chiusura JVM.
+RMIregistry, server e client devono poter accedere alle classi necessarie per l’esecuzione.
+ClassLoader: permette il caricamento dinamico di classi dalla rete (per esempio gli Applet) oppure dal disco. Esiste una gerarchia di classloader ciascuno responsabile del caricamento di classi diverse. Quello di base carica java.*. Ci sono politiche di uso di codice scaricato da internet: SecurityManager, che utilizza un file di policy con le autorizzazioni.
+RMIClassLoader NON è un ClassLoader vero e proprio, ma un componente di supporto RMI che esegue 2 operazioni fondamentali: Estrae il campo codebase dal riferimento remoto e usa i codebase classloader per caricare le classi necesarie dalla locazione remota.
+bind rebind e unbind sono eseguibili solo sulla macchina host per problemi di sicurezza: altrimenti si potrebbe ri-registrare una chiamata per renderla malevola.
+Naming: classe per effettuare le operazioni di registry. Si crea l'istanza dello stub utilizzando indirizzo e porta del registry e identificatore dell'oggetto registry fissato a priori dalla specifica RMI.
+Quando passo un remote in realtà passo uno stub e dall'altra parte si utilizza lo stub per le chiamate a funzione. Quando faccio la lookup nello stub viene settato objid remoto.
+Nel distribuito ho bisogno di un G.C. esteso: il server fa una richiesta di riferimento per un suo oggetto: se i client non rispondono allora chiude l'oggetto: i client non hanno rif. per l'oggetto. INEFFICIENTE.
+RMI registry è .class: si può cambiare, locale, non scalabile. Ho bisogno di una implementazione distribuita.
+

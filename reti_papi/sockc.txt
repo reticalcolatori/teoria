@@ -1,0 +1,233 @@
+﻿--SLIDE SOCKET in C--
+In C per la comunicazione e sincronizazzione remota (ma anche locale) si utilizza le SOCKET Unix BSD (sono quelle che hanno preso piede).
+
+Le socket sono conformi al paradigma dei file system: file descriptor, tabella dei file aperti, open-read-write-close.
+Ovviamente le API sono più estese per il supporto di casi più specifici oppure di casi senza connessione.
+
+Obiettivo: voglio IDEALMNENTE arrivare a lavorare in remoto come se stessi lavorando in locale
+
+Caratteristiche Sockey BSD: 
+1) Eterogeneità: comunicazione tra processi di architetture diverse. 
+2) Trasparenza alla locazione fisicadei processi. 
+3) Efficienza: guardo solo alla performance
+4) Compatibilità: i filtri sono funzionali in remoto senza modifiche! 
+5) Completezza: i protocolli di comunicazione sono vari e differenziati.
+
+Dominio di comunicazione: Semantica di comunicazione + relativo standard di Nomi. Esempi: UNIX Pipe, ARPA Internet (TCP/IP)
+
+Tipo di servizio: 
+- datagram (best-effort)
+- stream (at most once)
+- seqpacket (ha solo un ordine dei PDU)
+- raw (senza azione aggiuntiva)
+
+--------------------------------------------------------------------------------
+
+Sistema di Nomi: 
+Nomi logici delle socket (nomi locali, ind. socket nel dominio). 
+Nomi fisici da associare alla socket (nomi GLOBALI, porta sul nodo).
+
+Half-association: coppia di nomi logica e fisica
+- dominio Internet {famiglia indirizzo, indirizzo internet, porta} 
+- dominio Unix {famiglia indirizzo, path nel filesystem, file associato}
+- dominio CCITT (x.25)
+
+Socket Address(GLOBALE): 
+- struct sockaddr(generico anche non internet)
+- struct sockaddr_in (famiglia AF_INET): specifica i 14 byte lasciati liberi nel sockaddr generico: fa includere porta, indirizzo ip, e degli zeri di padding.
+
+Funzioni di supporto ai nomi
+- gethostbyname(): l'utente ha la stringa logica ma non possiede indirizzo fisico. RESTITUISCE (in BIG ENDIAN) un puntatore alla struttura hostent o NULL se fallisce.
+- getservbyname(): permette di trovare la porta di un servizio noto. Esistono alcune well-known port per i servizi noti.
+
+--------------------------------------------------------------------------------
+
+Primitive preliminari
+int sd = socket (int dominio, int tipo, int protocollo)
+- dominio: Unix, Internet, etc
+- tipo: SOCK_STREAM,SOCK_DGRAM,SOCK_SEQPACKET,SOCK_RAW
+- protocollo: quale protocollo utilizzare
+
+int result = bind (int sd, structsockaddr *addr, socklen_t addrLength)
+- sd: file descriptor della socket da agganciare
+- addr: indirizzo locale per la socket
+- addrLength: lunghezza indirizzo locale
+(associa il nome logico al nome GLOBALE che risiede in addr)
+--------------------------------------------------------------------------------
+
+SOCKET DATAGRAM
+
+Semantica: invio messaggi indipendenti, senza affidabilità nè controlli
+
+Client
+- dichiarazione della socket
+- conoscenza addr nodo remoto
+- conoscenza porta servizio 
+Server
+- dichiarazione della socket
+- conoscenza della porta per il servizio
+- ricezione su qualunque indirizzo ip locale (wildcard addr INADDR_ANY) utile per gestire più connessioni
+
+Protocollo datagram 
+Client				Server
+1) socket()				1) socket()	
+2) bind() (OPZIONALE)		2) bind()
+3) sendto() o write() ------> 3) recvfrom() o read()
+4) recvfrom() o read() <----- 4) sendto() o write()
+5) close() o shutdown()		5) close() o shutdown()
+
+I datagrammi scambiati sono messaggi di lunghezza limitata (9K o 16K), senza affidabilità alcuna nella comunicazione (best effort, es: UDP,IP).
+NON tutti i datagrammi inviati arrivano effettivamente al ricevente.
+Recvfrom restituisce solo un datagramma per volta.
+
+Come posso usare il protocollo ottenendo maggiore affidabilità?
+- invio di molti dati aggregati (mai mandare 2 datagrammi, se basta 1)
+- ritrasmissione dei messaggi e richiesta di datagramma di conferma
+
+Il problema è che no ho nessun errore in caso di non risposta, inoltre UDP non ha flow control quindi il ricevente può sovraccaricarsi di messaggi (posso modificare il buffer con le opzioni).
+
+--------------------------------------------------------------------------------
+
+Presentazione dei dati
+- Little-endian Byte Order: byte di ordine più basso nell’indirizzo iniziale
+- Big-endian Byte Order: byte di ordine più alto nell’indirizzo iniziale
+
+Per convertire: htons()/ntohs() per 16 but e htonl()/ntohl() per 32 bit
+
+--------------------------------------------------------------------------------
+
+SOCKET STREAM
+
+Semantica: prevedono una connessione virtuale tra le entità, quindi ho un costo maggiore ma ho anche garanzie.
+
+Ho NECESSARIAMENTE bisogno di due ruoli distinti client/server.
+- Client richiede il servizio (ruolo ATTIVO)
+- Server accetta di servire (ruolo PASSIVO)
+
+Il server accettando una richiesta in coda, genera una nuova socket e si connette. Una volta stabilita la connessione la comunicazione è del tutto simmetrica.
+
+Protocollo stream
+Client				Server
+1) socket()				1) socket()	
+2) bind() (OPZIONALE)		2) bind()
+3) connect()---------------->	3)listen()
+					4)accept()
+4) send() o write() -------->	3) recv() o read()
+5) recv() o read() <---------	4) send() o write()
+6) close() o shutdown()		5) close() o shutdown()
+
+Primitive Socket C
+
+- socket(): fa SOLO creazione locale!
+
+- bind(): crea la half-association collegando la socket creata localmente alla porta e al nodo globali. Ogni nodo che vuole essere visibile deve farla (server), mentre i client possono farla o meno perchè non hanno questa necessità
+
+- connect(): primitiva di comunicazione, sincrona. Termina quando la richiesta è accodata o in caso di errore. Può avere tempi elevati perchè tenta ritrasmissioni  (ATTENZIONE: al termine della connect, la connessione è già creata lato client, anche se il server non ha accettato!)
+
+-listen(): primitiva locale, passante (istantanea), e senza attesa. Crea una coda per le possibili richieste di servizio, se la coda è piena le successive richieste vengono scartate.
+
+- accept(): primitiva locale, con attesa. Può avere tempi di completamento anche elevati, lavora in locale recuperando dati ‘da comunicazione remota’. La socket creata dalla accept è nuova e connessa alla socket del client. Non offre la possibilità di filtrare le richieste.
+
+accept()e connect()realizzano una sorta di rendez-vous lasco: ho una parte di asimmetria a livello applicativo, ma il trasporto è coordinato. La accept() attua la reale connessione dalla parte server e crea la nuova socket connessa.
+
+Come comunico sulla connessione?
+- int nwrite = send (int sd, char* msg, int len, int flags)
+ come la write però permette di specificare i flag option: MSG_OOB out - of - band message.
+- int nread = recv (int sd, char* buf, int len, int flags)
+ come la read però permette di specificare i flag option: MSG_PEEK: azione non distruttiva di lettura: non sposta i/o pointer e quindi posso rileggere
+
+Ma a livello di trasporto le driver come si comportano?
+- I messaggi sono comunicati ad ogni primitiva? NO!
+- Esiste una corrispondenza tra numero di scritture e letture? Una lettura può anche consumare molti byte di scritture. Soluzioni? messaggi a lunghezza fissa oppure messaggi a lunghezza variabile alternati a descrittori a dim fissa della lunghezza.
+
+Come si coopera? segnali di fine flusso
+Ogni endpoint deve osservare un protocollo: deve leggere tutto l’input dal source fino alla fine del flusso e deve inviare una fine del file sul flusso quando vuole terminare i dati in uscita.
+
+Chiusura connessione ed effetti
+- int close (int sd): locale, passante e senza attesa. Il processo segnala al sistema operativo di rilasciare le risorse locali, alla driver di rilasciare le risorse remote. (Potenzialmente può richiedere molto tempo, opzione SO_LINGER può impostare un limite di tempo per la consegna dei dati)
+
+E'una primitiva a durata minima per il chiamante (localmente), ma ha un forte impatto sulla comunicazione, poichè c'è un forte ritardo tra chiusura a livello applicativo ed effettiva deallocazione della memoria nella driver TCP.
+- dati in Input vengono buttati via
+- dati in Output consegnati al pari (tempi lunghi!)
+
+Effetti close:
+- se si tenta una lettura, si ottiene EOF
+- se si tenta una scrittura, si ottiene un segnale di errore di connessione (NON CONOSCO A PRIORI SE L'ALTRO HA FATTO CLOSE!!)
+
+- int result = shutdown (int sd, int how):  close dolce in una direzione, tipicamente si chiude solo il verso di uscita quando ho terminato di inviare dati, mentre la shutdown di input quando ricevo EOF dal pari.
+
+Note utili per la programmazione
+
+Il processo prima di uscire deve preparare le condizioni del figlio daemon:
+- setsid(): sgancia il processo dal terminale e si associa ad un nuovo gruppo di processi, staccato dal terminale precedente.
+
+Alcune primitive (accept) sospensive hanno problemi se interrotte da segnali: le primitive devono essere ripristinate dall'inizio. Per questo si fa un ciclo e si verifica se errno == EINTR allora rifaccio il ciclo di primitiva.
+
+--------------------------------------------------------------------------------
+
+Opzioni per le socket
+Sono funzioni di utility per configurare socket
+
+- int getsockopt (int sd, int level (SOL_SOCKET), int optname, int &optval, int optlen (sizeof(char))) -> restituisce l'opzione che si chiama optname settata in sd
+- int setsockopt (int sd, int level (SOL_SOCKET), int optname, int &optval, int optlen (sizeof(char))) -> imposta l'opzione che si chiama optname in sd
+
+Alcune opzioni:
+- SO_REUSEADDR: il sistema non ammette più di un utilizzatore alla volta di un indirizzo locale, con l'opzione si richiede che la socket non controlli l'unicità dell'associazione (utile in fase di riavvio in caso di crash del server)
+- SO_LINGER: modifica il comportamento della close(), mediante una struttura linger si decide se e per quanto tempo mantenere i dati in memoria nella driver dopo la chiusura
+- SO_SNDBUF: set buffer send dim
+- SO_RCVBUF: set buffer read dim
+- SO_SNDTIMEO: set send timeout
+- SO_RCVTIMEO: set read timeout
+
+--------------------------------------------------------------------------------
+
+SOCKET ASINCRONE
+Le socket asincrone permettono operazioni senza attesa (mediante uso di ioctl o fcntl e opzioni). Al completamento l'utente viene avvisato con un segnale.
+- SIGIO segnala un cambiamento di stato della socket, ignorato dai processi che non hanno definito un gestore.
+
+Come rendo asincrona una socket?
+- int ioctl (int filedesc, int request (FIOASYNC), ... /* args */)
+
+SIGIO a chi deve essere consegnato in un gruppo di processi?
+- int ioctl (int filedesc, int request (SIOCSPGRP), &flag)
+Quando c'è un cambiamento in filedesc invio un segnale:
+- se flag negativo invio al pid = -flag
+- se flag positivo invio a tutti i processi del process group
+ 
+Socket sincrona non bloccante: il processo non si sospende in attesa della terminazione.
+Ci serve soprattutto in scrittura dove se siamo interessati a sapere che una operazione precedente è completata per fare una ulteriore azione di scrittura (senza ingolfare le driver): la informazione è il completamento della azione precedente (SIGIO) catturato dalla select (maschera output, vedi dopo).
+
+--------------------------------------------------------------------------------
+
+Attese multiple
+
+Problema: In caso di sorgenti multiple (eventi bloccanti multipli) è necessario attendere contemporaneamente su più eventi (es: una lettura può bloccare il processo senza fargli eseguire altre operazioni nel mentre).
+
+Soluzione: SELECT
+La select() sospende il processo fino a quando un evento si verifica oppure fino a timeout (primitiva di attesa multipla sincrona o con durata massima (timeout)).
+
+int sd = select(nfds, readfds, writefds, exceptfds, timeout)
+- size_t nfds: numero massimo di eventi attesi (bit di maschera: fdMax+1)
+- int *readfds: recv(), accept(), EOF
+- int *writefds: connect(), send(), SIGPIPE
+- int *exceptfds: dati out-of-band, close(), shutdown()
+- const struct timeval *timeout: NULL per attesa indefinita altrimenti
+
+All’invocazione, segnala nelle maschere gli eventi di interesse e il tempo.
+Al completamento, restituisce il numero di eventi occorsi e indica quali con le maschere (parametri di ingresso/uscita) rimaste e il tempo (timeout).
+
+Quanto attende la primitiva?
+- Con azione sospensiva bloccante sincrona (NULL nel timeout) si attende per sempre (massimo reale 31 giorni)
+- Con timeout si attende al massimo quanto specificato nel parametro timeval
+- Con azione non bloccante e passante, si specifica zero come valore nel campo di timeout e si lavora a polling dei canali
+
+Maschere
+La chiamata a select() esamina gli eventi per i file descriptor specificati nelle tre maschere (valore ingresso bit ad 1) relative alle tre tipologie.
+9 8 7 6 5 4 3 2 1 0 posizione file descriptor
+1 0 1 0 1 1 0 0 0 0 maschera in ingresso
+0 0 1 0 1 0 0 0 0 0 maschera in uscita
+In questo esempio vengono esaminati solo i fd: 4,5,7,9 e si sono verificati gli eventi 5,7
+
+
+SELECT IN SCRITTURA: la scrittura dipende in toto da chi fa l’azione (a default con azione sincrona bloccante), quindi l’evento può solo avvenire dopo l’azione. La maschera di scrittura serve solo in caso di socket in modalità asincrona o non bloccante poichè la select segnala l’evento di completamento della azione precedente e permette a chi fa la gestione di fare la azione successiva alla select.
+

@@ -1,0 +1,22 @@
+--SLIDE Programmazione di Sistema--
+Sistemi distributi, etereogenei, interconnessi.
+Componenti di sistema: funzionalità software senza le quali l'applicativo non funzionerebbe. Sono ottimizati. Nei sistemi distribuiti tendiamo ad averne di più e coordinati in modo dinamico e veloce.
+Infrastutture software e risorse.
+Prog. Monolitica: programma è sempre lo stesso e contiene tutte le funzionalità necessarie: se attiviamo più programmi avremmo la ripetizione delle funzionalità di supporto.
+Prog. Microservizi: programmi piccoli efficienti e capaci di interagire in modo dinamico. Li coordineremo tra di loro. Necessitano anche di un buon controllo delle situazioni di errore.
+Prog. Imperativa: c/java, usano stati e algoritmi precisi deterministici.
+Prog Dichiarativa: esprimono che cosa voglio fare meno deterministica. LISP, Scala, Prolog.
+Lo stato abbrevia la comunicazione.
+DEVOPS: faccio l'applcativo e determino i servizi di cui ha bisogno.
+Deployment: fase in cui decidiamo come allocare le risorse logiche alle risorse fisiche disponibili (decidendo una configurazione di esecuzione).
+Fasi Statiche: analisi, sviluppo e progetto di algoritmo e codifica nei linguaggi: ho prodotto una forma eseguibile.
+Fasi Dinamiche: Deployment, esecuzioni *efficienti: evitiamo di sprecare risorse. dipende da una comprensione integrale a tutti i livelli*. Noi siamo interessati alla esecuzione.
+Principi di progetto: Semplicità, efficienza consapevolezza, orientamento ai requisiti.
+Programmi di sistema: semplicità strutture dati, minimizzazione costo configurazione, minimizzazione uso risorse, minimizzazione overhead, capacità inerazione utente, prevenzione errori, etc.
+Strutture dati: 1)Statiche, 2)Limitate (array) 3)Con dati semplici e non troppo astratte 4) Controllo delle risorse allocate 5)prevenzioni errori.
+File: pensati per non stare in memoria. Stream di byte, alcuni sono testo, non trasportabili tra processori perchè risiedono nel disco. Continene la lunghezza non EOF.
+Semplicità degli algoritmi: No controlli ridondanti, poche call: eliminare le funzioni chiamate 1 volta. Eliminare le ripetizioni (usa dello stato). No ricorsione.
+Minimizzazione risorse: Non ripetere operazioni semplici(CPU)(usa stato), malloc/free fuori dai cicli, sempre usare la free., consumare gli stream in modo corretto, verificare input utente e non procedere in caso di errore.
+Filtro: modello che prevede un programma che riceve in ingresso da un input e produce risultati su uno o più output. Il filtro deve consumare tutto lo stream di input. Pipe ridirection.
+C non definisce l’input/output: uso di primitive a livello di S/O. L’input è sempre più complesso dell’output. Stdio.h non ha una semantica di errore. Scanf non sposta i/o (NON CONSUMA STREAM) in caso di errore.
+

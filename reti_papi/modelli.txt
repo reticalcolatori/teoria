@@ -1,0 +1,60 @@
+--SLIDE MODELLI--
+Sistemi distribuiti: insieme di sistemi distinti in località diverse che usano la comunicazione e la cooperazione per ottenere risultati coordinati. Sono più complessi dei concentrati ma hanno la possibilità di accedere a risorse remote come se fossero locali.
+Sistemi d'interesse: Trasparenti alla allocazione, come se il sistema sia concentrato, le risorse sembrano locali(nomi). Dinamicità del sistema: i collegamenti dipendono dalla situazione (se si congestiona un server si cambia collegamento). QoS. Nessun tempo globale. Fallimenti indipendenti. Concorrenza.
+La scabilità ha un range.
+Architetture MIMD: Multiple Istruction Multiple Data: Ogni nodo processa istruzioni diverse su dati diversi: Calcolatori indipendenti.
+Openess: capacità di evolvere secondo nuove specifiche: LIMITATO richiederebbe troppa complessità.
+Architettura Software: binding: decido dove mettere i componenti nei nodi il binding dinamico è da preferire: serve un servizio di nomi.
+Modello di azione: sono necessari processi come attività, azioni specifiche su dati locali, protocolli per coordinare le azioni.
+Protocollo: complesso di regole e procedure cui ci si deve attenere in determinate attività per la esecuzione corretta. Uso di standard de facto o di comitato.
+Per i sistemi operativi esiste uno standard di processo API: I/O, filtri, concorrenza, comunicazioni. Modello architetturale UNIX: processi pesanti.
+Standard nel distribuito: PROBLEMA: i sistemi dist. sono fatti da nodi molto etereogenei: uso di ambiente aperto unificante: UNIX ha rappresentato n ambiente molto accetato per alcune aree(file e comunicazione). Nel caso di processi leggeri UNIX non è standard.
+JAVA come ambiente standard: threadm fs e risorse di sistema e di comunicazione. JVM.
+WEB: non è molto distribuito, semplicemente in rete: si basa su link page.
+CLIENT/SERVITORE: protocollo di coordinamento tra due entità che cooperano per una comunicazione e un servizio. 1->N. 
+Sincrono: Il cliente si aspetta una risposta (Il contrario è asincrono)
+Bloccante: Il cliente attende la risposta(Il contrario è non bloccante)
+Assimetrico: il cliente deve conoscere dove si trova il servitore, non il viceversa (il contrario è simmetrico)
+Dinamico: il binding tra c/s è dinamico, cioè il servitore potrebbe cambiare.
+Default C/S: 1-N (sempre), sincrono, bloccante, risolve il rendez-vous(per sinc dei processi comunicanti), con server sempre in attesa(DEMONE), asimmetrico, dinamico.
+Progetto server più complesso: dovrebbe risolvere più problemi: concorrenza, integrità, autorizzazione, autenticazione, privacy...
+LIMITI C/S: il cliente aspetta all'infinito!: Il timeout è una fase critica di design, L'accoppiamento è molto stretto e necessitiamo di entrambe le parti per interagire (strong coupling): Impossibilità di Multicast (MX) and Broadcast (BX).
+Modello pull: il cliente decide quando ripetere la richiesta: ha sempre iniziativa.
+Modello push: ESEMPIO FEED RSS il cliente fa la richiesta una sola volta, si sblocca. Il server arriva a fare il servizio e ha la responsabilità di consegna del risultato. Carica il servitore di un compito in più.
+Servitore: coda, demone, sequenziale o concorrente(parallelo o monoprocesso)(più operazioni alla volta), continuità alle interazioni con i clienti (con o senza stato), interazioni complesse e differenziate.
+Considerare i costi e il risultato.
+Il server deve riconoscere ripetizioni della richiesta (nel caso di cliente non bloccante): necessità di transaction number.
+Delegazione: si possono delegare le attese di risposta ad agenti esterni (proxy...).
+C/S molto adatto alla interazione in un ambiente distribuito con molti nodi, risorse e servizi diversi da fornire. Regole chiare e ad alto livello: asimmetrico, dinamico, sincorno bloccante. L'accoppiamento è molto stretto e necessitiamo di entrambe le parti per interagire (strong coupling).
+Modello a scambio di messaggi Light coupling: spesso usato a livello di supporto perchè troppo primitivi e poco disciplinati asincrono non bloccante.
+Modello ad eventi: Asincrono fortemente disaccopiato, molti a molti, non bloccante serve un gestore di supporto. ESEMPIO Produttore consumatore e sistema gestore. Il low level permette usi eterogenei di sistema. Multicast e broadcast possibili. NON FACILE!!!
+C/S connection interaction: si stabilisce un canale di comunicazione virtuale prima dello scambio di dati.  TCP.
+C/S Connection less interaction: senza connessione virtuale (posta). UDP.
+Qualità di connessione (OSI): qualità dela latenza, ordine, affibilità. TCP non è di qualità perchè si affida solo sugli estremi. Internet ha scelto di abbassare i costi e non utilizzare osi costoso che richiederebbe risorse intermedie.
+Visiblità: vincolato: ho una visione ridotta dei partecipanti. Sistema non vincolato: devo potermi collegare direttamente (globale) non è scalabile
+Stato in C/S: utile in caso di iterazione ripetuta. Il server stateless è più leggero e affidabile Operazioni idempotenti(se ripetute offrono lo stesso risultato) ESEMPIO API NFS SUN. Steful: open/close le sessioni aperte potrebbero essere troppo costose, non scalabile (migliore in caso di stato soft: dopo un po si cancella lo stato). Il client può semplificare il protocollo. ESEMPIO API I/O UNIX.
+Comunicazione: alcune cose sono da accordare tra le due parti, altri vengono scelte indipendentemente.
+Servitore sequenziale iterativo: serve 1 richiesta alla volta e itera il serivzio: la risposta è data dal tempo di elaborazione e il tempo di risposta.
+Servitore iterativo: serve 1 richiesta alla volta e accoda le altre in attesa: limitare coda e rifituare le conn a coda piena.
+Servitore concorrente: + richieste alla volta: la concorrenza può ridurre significativamente il tempo di risposta se i/O burst se tempi elaborazioni variabili e se il server è eseguito in un multiprocessore.
+Il cliente è sempre un FILTRO.
+Modello ad agenti multipli: schema in cui sono presenti più servitori (agenti) che forniscono un servizio globale (posta): partizionare le capacità di servizio, replicare le funzionalità di servizio in modo trasparente al cliente.
+ARCHITETTURE A PIÙ LIVELLI: MODELLI a LIVELLI MULTIPLI per la divisione dei compiti.
+Sistema di nomi: servitori che sono capaci di fornire servizi di gestione e mantenimento dei nomi. I nomi servono per identificare e trovare i servizi e fare binding alle risorse.
+Nomi trasparenti e non: trasparente: servizio di alto livello non si conosce il nodo fisico: esempio "stampa", consente un alto livello di atrazione. Non trasparente è di basso livello, si conosce il nodo fisico del servizio.
+Binding: legame tra risorsa logica (nome) e risorsa fisica(target) che permette di risolvere il riferimento e trovare il target.
+Binding statico: riferimenti risolti prima della esecuzione: tipicamente dei sistemi concentrati. Il binding statico è rigido e inflessibile.
+Binding dinamico: i riferimenti vengono risolti solo al momento del bisogno e durante esecuzione. Tipico dei sistemi distribuiti dove le risorse sono dinamiche e non prevedibili staticamente e i sistemi di nomi sono presenti durante l'esecuzione per attuare il binding dinamico: ciò comporta entità diverse in tempi diversi. Necessario un servizio di nomi con la tabellina. I nomi trasparenti non dipendono dalla allocazione!
+Sistemi di nome globali: keywords: efficienza, fattibilità. Uso di partizionamento (principio di località) e uso di repliche per ridondanza. Tipicamente si prevedono molteplici gestori di nomi distinti e coordinati tra di loro (agenti).
+DNS: Sistema di nomi atto a traslare nomi in ip. Devono esistere entrambi per la traslazione. Si utilizza una gerarchia ad albero, con radice e sotto domini. Ogni organizzazione ha un suo gestore DNS.
+Richieste DNS: se locali dal proprio gestore DNS, se globali il gestore DNS DELEGA la richiesta al gestore di competenza (server di responsabilità). Salverà in cache la risposta.
+Nomi DNS: path 255 char. Single name 63 char. Navigazione relativa o assoluta.
+Name resolver: agente specifico che risolve le richieste degli utenti. Gli utenti non possono fare query direttamente ad un name server. Il name resolver ha una propria cache.
+Replicazione DNS: un master primario e una serie di master secondari di backup. Un master primario può fare da backup per un'altra zona. I secondari effettuano delle richieste cicliche (metodo PULL) per aggiornarsi USO DI TCP invece che UDP.
+Risoluzione QUERY DNS: ricorsiva: modello ad agenti: il dns server si incarica di effettuare la ricerca per il name resolver (può chiedere ad altri), formando una catena di dns. Può dare errore o la risposta: NAME RESOLVER -> LOCAL DNS -> UPPER DNS 1 -> UPPER DNS 2 -> ... -> ROOT DNS -> ... -> REQUESTED DNS -> ... -> ROOT DNS -> ... -> LOCAL DNS -> NAME RESOLVER.
+Risoluzione QUERY DNS: iterativa: il dns server fornisce al name resolver la risposta o il suggerimento di dove fare la query. La query viene comunque fatta dal dns locale: NAME RESOLVER -> LOCAL DNS -> UPPER DNS -> LOCAL DNS -> ANOTHER DNS -> LOCAL DNS -> REQUESTED DNS -> LOCAL DNS -> NAME RESOLVER.
+Si usano timeout e consultazioni di altri dns server (anche secondari) per individuare problemi di crash.
+Tabella nomi DNS: insieme di record con molti attributi: nome dominio, TTL, Class (IN), Type, Value.
+Query inversa DNS: IP -> NOME
+OSI (Open System Interconnection): obiettivo di comunicazione aperta tra reti e tecnologie diverse e proprietarie: vantaggi open standard: interoperabilità. OPEN non significa GRATUITO.
+Nomi TCP/IP: Trasporto: si definiscono le porte. Livello Internet (IP): si definiscono i nomi IP (32 bit, NETID:HOSTID) Network Information Center assegna il numero di rete e le autorità locali definiscono i nomi di host.
