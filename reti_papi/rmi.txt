@@ -1,29 +1,119 @@
---SLIDE RMI--
-Architettura RMI: richiedere esecuzione di metodi remoti in JAVA, restando nel paradigma OOP. Contiene strumenti politiche e meccanismi che permettono ad un'app Java di eseguire metodi di un oggetto remoto in un'altra JVM. Solo interazioni SINCRONE e BLOCCANTI. USO DI TCP.
-Riferimento: localmente si ha solo un riferimento remoto all'oggetto. L'oggetto è attivo solo nel nodo remoto. Il riferimento locale viene mantenuto da un'interfaccia che fa da CONTRATTO. Si possono avere più interfacce per oggetto. Si usano dei Proxy per nascondere le socket TCP. 
+﻿--SLIDE RMI--
+
+Architettura RMI
+
+Richiedere esecuzione di metodi remoti in JAVA, restando nel paradigma Object-oriented. Contiene strumenti politiche e meccanismi che permettono ad un'applicazione Java di eseguire metodi di un oggetto remoto su una macchina remota.
+
+La sintassi rimane uguale per trasparenza con il cliente, ma cambia la semantica perchè lavorando in remoto si ha possibilità di fallimento.
+Si lavora solo con interazioni SINCRONE e BLOCCANTI mediante uso di TCP.
+
+Riferimento: localmente si ha solo un riferimento remoto all'oggetto, poichè l'oggetto è attivo solo nel nodo remoto. Il riferimento locale viene mantenuto da un'interfaccia che fa da CONTRATTO. Si possono avere più interfacce per oggetto. Si usano 2 Proxy per nascondere la natura distribuita dell'applicazione. 
+
 Eterogeneità dei sistemi: grazie alla portabilità del codice java è possibile un unico ambiente di lavoro anche con sistemi eterogenei.
-Proxy: Stub (cliente) effettua le richieste allo Skeleton (servitore) che riceve la richiesta e fa la call locale: nascondono al livello applicativo la natura distribuita dell'applicazione. 
+
+Come funzionano i proxy? 
+Lo Stub (cliente) effettua le richieste allo Skeleton (servitore) che riceve la richiesta e fa la call locale
+
+--------------------------------------------------------------------------------
+
 Data la natura legacy della JVM non è possibile referenziare un oggetto remoto direttamente: necessità di una infrastruttura attiva e distribuita.
-Livelli RRL (Remote Reference Layer): gestisce i riferimenti agli oggetti remoti, parametri e delle astrazioni stream; e TL (Transport Layer): gestione delle connessioni, protocollo proprietario, sistema di nomi Registry.
+
+All'interno della macchina virtuale JVM troviamo due livelli:
+
+1) Livello RRL (Remote Reference Layer):
+Si colloca logicamente tra proxy e Transport layer, gestisce i riferimenti agli oggetti remoti, ai parametri e delle astrazioni stream
+
+2) Livello TL (Transport Layer): gestione delle connessioni tra JVM diverse, utilizza un protocollo proprietario, utilizza un sistema di nomi (Registry) 
+
+Che cos'è il Registry?
 Registry: servizio di nomi a livello locale, che consente al server di pubblicare un servizio e al client di recuperarne il proxy.
-I due livelli, RRL e Transport, sono parte della macchina virtuale JVM.
-Ogni metodo dell'interfaccia che deve estendere Remote deve fare throws RemoteException. Ogni classe che implementa il contratto deve estendere l'oggetto UnicastRemoteObject.
-Utilizzo RMI: definizione interfaccia e implementazione componente. 2) compilazione e rmic 3) pubblicare sul rmi registry. 4) ottenere lato client il riferimento all'oggetto remoto tramite name service, facendo una lookup sul registry.
-Il cliente deve sapere dove è collocato il rmi registry. NON c’è trasparenza alla locazione
-Marshalling: processo di codifica degli argomenti e dei risultati per la trasmissione. Unmarshalling: processo inverso di decodifica di argomenti e risultati ricevuti.
-In java non c'è bisogno di marshalling, ma solo di serializzazione: trasformazione di oggetti complessi in semplice sequenza di byte. Non sempre è possibile.
-Passaggio dei parametri: in locale gli oggetti vengono passati per riferimento, mentre in remoto si fa una deep copy, almeno che non si tratti di oggetti remote che vanno passati per riferimento remoto.
-Il Registry è in realtà un server RMI per ragioni di economicità di implementazione e anche di principio. Si può implementare il registry dentro alla propria applicazione.
-Stub: effettua l'invocazione, gestisce la serializz. spedisce e riceve gli argomenti e il risultato. Si appoggia su RRL. Contiene il riferimento all'istanza remota.
-Skeleton: gestisce serializz. spedisce e riceve i dati appoggiandosi su RRL ed invoca il metodo richiesto (dispatching).
-Tipicamente un thread per call: necessito di lock synchronized e server thread safe. Il thread viene generato a livello JVM.
-Se esiste già una connessione tra due JVM si cerca di riutilizzarla. Di solito si utilizza fino a chiusura JVM.
-RMIregistry, server e client devono poter accedere alle classi necessarie per l’esecuzione.
-ClassLoader: permette il caricamento dinamico di classi dalla rete (per esempio gli Applet) oppure dal disco. Esiste una gerarchia di classloader ciascuno responsabile del caricamento di classi diverse. Quello di base carica java.*. Ci sono politiche di uso di codice scaricato da internet: SecurityManager, che utilizza un file di policy con le autorizzazioni.
-RMIClassLoader NON è un ClassLoader vero e proprio, ma un componente di supporto RMI che esegue 2 operazioni fondamentali: Estrae il campo codebase dal riferimento remoto e usa i codebase classloader per caricare le classi necesarie dalla locazione remota.
-bind rebind e unbind sono eseguibili solo sulla macchina host per problemi di sicurezza: altrimenti si potrebbe ri-registrare una chiamata per renderla malevola.
+
+Implementazione RMI
+
+Ogni metodo dell'interfaccia deve estendere Remote e deve fare throws RemoteException. Ogni classe che implementa il contratto deve estendere l'oggetto UnicastRemoteObject.
+
+Utilizzo RMI
+1) definizione interfaccia e implementazione componente
+2) compilazione interfaccia e rmic per generare stub e skeleton
+3) attivazione registry e registrazione servizio presso di esso (bind)
+4) ottenere lato client il riferimento all'oggetto remoto tramite name service, facendo una lookup sul registry e compilazione cliente
+5) una volta terminato il main, il processo non termina in quanto c'è ancora il registry che lo tiene riferito e quindi rimane un demone capace di rispondere a tutti i clienti che lo riferiscono
+
+Il cliente deve sapere dove è collocato il rmi registry (che viene sempre attivato su un istanza JVM separata dal server). Il registry mantiene un insieme di coppie {name,reference} dove name è una stringa del tipo //nomehost:porta/servizio. NON c’è trasparenza alla locazione.
+
+--------------------------------------------------------------------------------
+
+Serializzazione
+
+Problema: in generale, in tutti i sistemi in cui si riferiscono funzionalità remote, i parametri di ingresso e uscita subiscono una duplice trasformazione per risolvere i problemi di rappresentazioni eterogenee.
+
+- Marshalling: processo di codifica degli argomenti e dei risultati per la trasmissione.
+- Unmarshalling: processo inverso di decodifica di argomenti e risultati ricevuti.
+
+In java, grazie all'uso di BYTECODE uniforme e standard (linearizzazione), non c'è bisogno di marshalling, ma solo di serializzazione ovvero trasformazione di oggetti complessi in semplice sequenza di byte (non sempre è possibile).
+Il workflow di Java fa si che il livello di presentazione si presenti vuoto, in quanto mi è tutto assicurato dal linguaggio comune.
+
+Passaggio dei parametri
+- in locale gli oggetti vengono passati per riferimento (tipi primitivi per copia) molto meno costoso che passare l'intera struttura
+- in remoto si fa una deep copy (writeObject()) solo se tutto il grafo dei riferimenti risulta essere serializzabile, a meno che non si tratti di oggetti remote che vanno passati per riferimento remoto
+
+--------------------------------------------------------------------------------
+
+Il Registry è in realtà un server RMI per ragioni di economicità di implementazione e anche di principio. Si può implementare il registry anche dentro alla propria applicazione.
+
+Stub
+
+Effettua l'invocazione, gestisce la de/serializzazione, spedisce e riceve gli argomenti e il risultato.
+Si appoggia su RRL. Contiene il riferimento all'istanza remota.
+Molto orientato al servizio che vuole chiedere, contiene l'objID del servizio che vuole ottenere dopo aver effettuato la lookup del registry.
+Lookup: fa si che una volta eseguita, popola il campo objID dello stub con quello dello skeleton di interesse (potenzialmente ne potrei avere più di 1)
+
+Skeleton
+
+Gestisce la de/serializzazione, spedisce e riceve i dati appoggiandosi su RRL ed invoca il metodo richiesto (DISPATCHING).
+Tipicamente ho un thread per call: necessito di lock (synchronized) per i problemi di sincronizzazione e mutua esclusione, il server parallelo deve essere thread safe.
+Il thread viene generato a livello JVM.
+
+Comunicazione a livello di trasporto:
+Se esiste già una connessione tra due JVM si cerca di riutilizzarla fino a chiusura JVM.
+
+--------------------------------------------------------------------------------
+
+Garbage collector
+
+Lavorando in locale, quando un oggetto non è più riferito da nessun thread viene rimosso dall'heap dal garbage collector.
+Nel distribuito questa scelta non risulta possibile poichè la memoria non è "condivisa" tra client e server lavorando in remoto, per cui il server (sfruttando la connessione TCP tra le due JVM) invia dei messaggi di "Are you alive?" ai client per controllare se essi hanno ancora intenzione di riferire un tale oggetto.
+
+--------------------------------------------------------------------------------
+
+RMI class loading
+
+Problema: RMIregistry, server e client devono poter accedere alle classi necessarie per l’esecuzione.
+
+Soluzione: in Java le classi possono essere caricate dinamicamente anche da remoto, durante l'esecuzione mediante un classloader.
+
+ClassLoader
+Strumento che permette il caricamento dinamico di classi dalla rete (per esempio gli Applet) oppure dal disco.
+Esiste una gerarchia di classloader ciascuno responsabile del caricamento di classi diverse (quello di base carica java.*).
+
+Sicurezza: devono essere previste politiche di uso di codice scaricato da internet. Esiste un SecurityManager, ovvero un controllore di correttezza e sicurezza di ogni singola operazione, il quale utilizza un file di policy con le autorizzazioni.
+
+RMIClassLoader NON è un ClassLoader vero e proprio, ma un componente di supporto RMI che esegue 2 operazioni fondamentali:
+- estrae il campo codebase dal riferimento remoto
+- usa i codebase classloader per caricare le classi necesarie dalla locazione remota
+
+Problema: accedendo al registry è possibile ridirigere per scopi maliziosi le chiamate ai server RMI registrati.
+Soluzione: bind(), rebind(), unbind() sono invocabili solo dall'host su cui è in esecuzione il registry.
+
+Come è possibile ritrovare il riferimento remoto?
 Naming: classe per effettuare le operazioni di registry. Si crea l'istanza dello stub utilizzando indirizzo e porta del registry e identificatore dell'oggetto registry fissato a priori dalla specifica RMI.
-Quando passo un remote in realtà passo uno stub e dall'altra parte si utilizza lo stub per le chiamate a funzione. Quando faccio la lookup nello stub viene settato objid remoto.
-Nel distribuito ho bisogno di un G.C. esteso: il server fa una richiesta di riferimento per un suo oggetto: se i client non rispondono allora chiude l'oggetto: i client non hanno rif. per l'oggetto. INEFFICIENTE.
-RMI registry è .class: si può cambiare, locale, non scalabile. Ho bisogno di una implementazione distribuita.
+
+
+CONCLUSIONI
+Architettura molto vincolante e poco scalabile in quanto il vincolo di coresidenza tra server e RMIregistry ci porta a denotare come rmi sia una soluzione buona nel piccolo ma LERCIA nel largo (non scalabile!!)
+
+Essendo il registry a livello applicativo nulla mi vieta di modificarlo per abbattere il vincolo dello spazio di nomi limitato (coresidenza, spazio locale)
+Si è optato per questa soluzione per motivi di sicurezza, ciò che non è locale non è controllabile.
+
+Ha senso avere una JVM indipendente per l'RMIregistry, poichè questo mi consente di registrare server che fanno parte di JVM distinte. Se integrassi il registy all'interno della stessa JVM introdurrei un vincolo MOLTO pesante in quanto potrei registrare solo server coresidenti.
 

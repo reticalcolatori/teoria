@@ -2,7 +2,10 @@
 
 Diffusione internet: dovuta ad una nuova offerta di servizi che ha invogliato clienti già agganciati e nuovi clienti:
 - stampa remota, terminale remoto, ftp (C/S due entità)
-- mail, news, dns (infrastruttura distribuita)
+- mail, news, dns, discovery (infrastruttura distribuita)
+
+Meccanismo: identificato dai protocolli
+Strategie: implementate dalle politiche
 
 Protocolli standard: telnet, ftp, tftp, smtp, nntp, lpdp, dns, http.
 Protocolli solo UNIX: rsh, rwho, rlogin...
@@ -47,7 +50,7 @@ Implementazione NVT
 - negoziazione del terminale: possibile ad inizio connessione sia successivamente per decidere: half-full-duplex, tipo di terminale, codifica 7-8 bit. 
 - negoziazione SIMMETRICA. Richieste negative DONT e WONT sempre accettate.
 - Possibilità di buffer a linea (OneLineAtaTime invece che OneCharAtaTime di default) con relativi ritardi(linemode).
-- uso di dati urgenti
+- uso di dati urgenti tramite canale riserveto, se non sono veloce a consumare il buffer gli ultimi dati sovrascrivono i precendenti
 
 Implementazione a pseudo-terminal: il terminale viene implementato al livello di applicazione come dispositivo che si comporta come un dispositivo reale, semplificando i/o e controlli ma aumentando inefficienze.
 
@@ -78,8 +81,6 @@ La prima cifra codifica le interazioni.
 La seconda cifra codifica le risposte.
 La terza cifra specifica più precisamente.
 
-%%%%%%%%%%%%%%%%%%% AGGIUNGERE PIPPONE SU CODIFICA NUMERICA %%%%%%%%%%%%%%%%%%%%
-
 FTP anonymous
 Usato per condividere informazioni. Normalmente i server FTP chiedono di default che l’utente inserisca i propri dati di login per effettuare l’upload/download dei file. Molti servizi di web host offrono però un servizio addizionale: l’FTP anonimo. Di cosa si tratta? Questo servizio offre la possibilità agli utenti di loggarsi sul server FTP senza inserire password e utilizzando l’username “anonimo”.L’utente anonimo può scaricare file pubblici, ma potrebbe non essere in grado di effettuare l’upload.
 
@@ -104,7 +105,7 @@ Il mittente non aspetta il destinatario (SPOOLING), l'email viene presa in caric
 email dati e protocollo
 Caratteristica: standard semplice e LEGACY.
 Messaggi divisi in:
-- Header: from,to date, subject;
+- Header: from, to, date, subject;
 - Opzionali: cc, bcc, replay-to, message-id.
 - Corpo: testo in formato ASCII PURO.
 
@@ -116,7 +117,7 @@ ciclo senza fine A -> B -> A...
 Architettura mail
 Uso di modello ad agenti:
 - user agent (UA), contiene le in/out box degli utenti e si interfaccia con gli utenti
-- mail tranfert agent (MTA), si tratta del router non visibili dall'utente, solo da UA. Trasferiscono mail dall' UA sorgente a quello di destinazione.
+- mail transfer agent (MTA), si tratta dei router non visibili dall'utente, solo da UA. Trasferiscono mail dall'UA sorgente a quello di destinazione.
 
 UA e MTA sono indipendenti tra loro e replicati.
 
@@ -146,6 +147,5 @@ Utilizza il protocollo NNTP.
 
 NNTP
 Network News Transfer Protocol (port 119)
-
 Propagazione come le onde: paradosso temporale: prima risposta, poi domanda. Il tempo è una variabile locale non utilizzabile per coordinare i processi. Uso del protocollo NNTP (119).
 

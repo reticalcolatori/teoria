@@ -1,29 +1,137 @@
---SLIDE REMOTE CALL PROCEDURE--
-Semantica della comunicazione: MAY-BE o BEST EFFORT: per limitare i costi ci si basa su un solo invio di ogni informazione, il messaggio può non arrivare.
-Internet è BEST-EFFORT. In IP ogni azione è fatta una volta sola, senza QoS.
-Semantica AT-LEAST-ONCE: prevede ritrasmissioni ad intervallo: il messaggio può arrivare anche più volte a causa dei dup. Il client soltanto si occupa dell'affidabilità. Il server potrebbe rieseguire la richiesta.
-Semantica AT-MOST-ONCE: C/S coordinati per ottenere qualche QoS. In caso di insuccesso nessuna informazione.
-Semantica EXACTLY-ONCE o atomicità: il messaggio arriva una sola volta oppure non è stato considerato da entrambi. Al termine si sa se l'operazione è stata eseguita o meno. Semantica tutto o niente. La durata può essere non limitata: in quanto bisogna aspettare il recovery e il rinvio.
-UDP e IP: may-be TCP: at most once: nessuna garanzia in caso di insuccesso.
-TCP: bidir, dati differenziati: normali e prioritari, flow control, congestion control, controllo stream byte.
-RPC: estensione della call locale come C/S nel distribuito. Approccio applicativo (livello 7 OSI). Il cliente invia la call e aspetta il risultato in modo sincrono. Differenze: processi distinti, spazio indirizz. distinto, c/S hanno vita separata, possibile guasto sui nodi intermedi o nella comunicazione.
-Remote Procedure Call: consente il controllo dinamico del tipo dei parametri e del risultato. Trattamento dei parametri tramite marshalling (livello presentazione). Trasparenza, type checking, controllo concorrenza e eccezioni. Binding distribuito. Trattamento degli orfani.
-RPC: ogni servizio è eseguito su un processo indipendente, generato pe rogni richiesta automaticamente.
-Tolleranza ai guasti: mascherare i malfunzionamenti. Il cliente può tentare politiche diverse e diversi comportamenti. 
-Spesso si assume che le operazioni siano itempotenti: se ripetute nel tempo non variano come risultato.
-In caso di crash del client i processi orfani nel server vengono gestiti seguendo politiche tipiche: sterminio, terminazione a tempo, terminazione a epoca.
-Open Network Computing (ONC): primitiva callrpc che permette di fare una chiamata remota inserendo il nome del nodo remoto, id della procedura e specifiche di trasformazione degli argomenti tramite XDR (eXternal Data Rappresentation).
-Network Computing Architecture (NCA): routine stub per ottenere trasparenza. Gli stub sono forniti dall'implementazione e generati automaticamente. Lo stub ha un dispatcher che invoca le procedure remote.
-Passaggio di parametri: in generale si preferisce il passaggio per valore: (un)marshalling. Nel caso di passaggio per riferimento si rende l'oggetto remoto e si passa il riferimento.
-Eccezioni: le RPC hanno un gestore di eccezioni. Si specificano le azioni da eseguire in un gestore apposito.
-IDL (Interface Definition Language): longuaggi per la descrizione delle operazioni remote, la specifica del servizio detta firma e la generazione degli stub. Identificazione unica del servizio tra quelli possibili. Definizione astratta dei dati da trasmettere in input e output. Estendibile con ereditarietà, binder e altre entità.
-XDR:  Si tratta di un IDL della SUN PROPRIETARIO. Definisce le operazioni remote e i parametri. L'utente sviluppa un file con la descrizione dei servizi. Possibilità di versioni diverse.
-RPCGEN: trasforma XDR(IDL) in Stub.
-RPC Binding: Fase statica: il client specifica il servizio tramite naming. Fase dinamica: indirizzamento: durante l'esecuzione il cliente si collega realmente al servizio tramite indirizzzamento. Si cercano eventuali servitori pronti per il servizio.
-ADDRESSING: 1) Esplicito: il cliente deve raggiungere un seritore in qualche modo, magari tramite broadcast. 2) Utilizzo di sistema di nomi (Binder, Broker, Name Server). In RPC SUN Port Mapper.
-Possibilità di RPC non bloccanti: RPC a bassa latenza: trascurano il risultato diventando realmente asincrone. RPC a througput elevato: fanno un check di conferma dopo un tot di invii BATCHING.
+﻿--SLIDE REMOTE CALL PROCEDURE--
+
+Semantica della comunicazione
+
+Semantica MAY-BE o BEST EFFORT
+Per limitare i costi ci si basa su un solo invio di ogni informazione, il messaggio può non arrivare.
+Internet è tutto BEST-EFFORT. In IP ogni azione è fatta una volta sola, senza QoS.
+
+Semantica AT-LEAST-ONCE
+Prevede ritrasmissioni ad intervallo: il messaggio può arrivare anche più volte a causa dei duplicati dovuti a ritrasmissione. Il client si preoccupa dell'affidabilità, è lui che tiene traccia dello stato della comunicazione. Il server potrebbe rieseguire la richiesta.
+
+Semantica AT-MOST-ONCE
+C/S coordinati per ottenere garanzie di correttezza e affidabilità. In caso di insuccesso nessuna informazione, ma se arriva sono sicuro che venga considerato una volta al massimo.
+
+Semantica EXACTLY-ONCE o atomicità
+Il messaggio arriva una sola volta oppure non è stato considerato da entrambi. Al termine si sa se l'operazione è stata eseguita o meno. Semantica tutto o niente. Semantica senza durata massima: in quanto, se le cose vanno male bisogna aspettare che l'altro abbia fatto la recovery (durata non predicibile)
+Semantica non utilizzata per applicazioni reali, troppo dispendiosa.
+
+Che semantica utilizzano i protocolli di trasporto più noti?
+UDP/IP: may-be
+TCP: at most once (nessuna garanzia in caso di insuccesso!!)
+
+TCP: bidirezionale, dati differenziati (normali e prioritari), flow control, congestion control, controllo stream byte.
+
+--------------------------------------------------------------------------------
+
+RPC (Remote Procedure Call)
+
+Obiettivo: estensione del meccanismo di chiamata a procedura locale come C/S nel distribuito. (prima visione Birrel e Nelson nel 1984)
+
+Approccio applicativo (livello 7 OSI): Il cliente invia la call e aspetta il risultato in modo sincrono e bloccante (default).
+
+Differenze rispetto alla chiamata a procedura locale:
+- processi distinti su nodi diversi
+- spazio indirizzamento distinto
+- C/S hanno ciclo vita separata
+- possibile guasto sui nodi intermedi o nella comunicazione
+
+Caratteristiche RPC
+- consente il controllo dinamico del tipo dei parametri e del risultato
+- include il trattamento dei parametri di ingresso/uscita tramite marshalling
+
+Proprietà RPC
+- trasparenza (a livello di sintassi non cambia nulla tra locale e remoto)
+- type checking e parametrizzazione
+- controllo concorrenza e eccezioni
+- binding distribuito
+- gestione degli orfani (?)
+
+Politiche di accettazione e risposta
+- unico processo che decide se e quando eseguire i metodi (sequenziale)
+- ogni servizio è eseguito su un processo indipendente, generato per ogni richiesta automaticamente
+
+Tolleranza ai guasti
+L'obiettivo applicativo è mascherare i malfunzionamenti.
+Il cliente può tentare politiche diverse e diversi comportamenti. 
+Spesso si assume (mi baso sull'ipotesi) che le operazioni siano idempotenti: se ripetute nel tempo non variano come risultato.
+
+In caso di crash del client i processi orfani nel server vengono gestiti seguendo politiche tipiche:
+- sterminio: ogni orfano viene distrutto
+- terminazione a tempo: scadenza oltre la quale automaticamente abortito
+- terminazione a epoca: scaduta "epoca" tutto ciò che era relativo ad essa viene distrutto
+
+--------------------------------------------------------------------------------
+
+Open Network Computing (ONC)
+modello utilizzato per le chiamate a procedure remote. Si basa sull'interazione remota tra client e server con il primo che effettua la chiamata di procedura remota che prende in ingresso oltre agli argomenti logici anche informazioni su:
+- nome del nodo remoto
+- identificativo della procedura (univoco)
+- sulle specifiche di trasformazione degli argomenti (XDR)
+È un modello non trasparente all'interno del quale a seguito della chiamata di procedura remota, attraverso la quale avviene la richiesta, nel processo server avviene la chiamata al servizio che produrrà la risposta che verrà in seguito inoltrata dal server stesso al client, che sarà bloccato in attesa della risposta.
+
+Network Computing Architecture (NCA): routine stub per ottenere trasparenza.
+Schema NCA:
+- gli stub sono forniti dall'implementazione e generati automaticamente
+- lo stub del client recupera il server, tratta i parametri in ingresso e effettua la richesta allo stub del server
+- lo stub del server tratta i parametri, ha un dispatcher che invoca le procedure remote e restituisce la risposta
+
+Passaggio di parametri
+In generale si preferisce il passaggio per valore,é necessario fare marshalling.
+Nel caso di passaggio per riferimento si rende l'oggetto remoto e si passa il riferimento.
+
+Trattamento eccezioni
+Le RPC hanno un gestore di eccezioni dove si specificano le azioni da eseguire.
+
+--------------------------------------------------------------------------------
+
+IDL (Interface Definition Language)
+Linguaggi per la descrizione delle operazioni remote, la specifica del servizio (detta firma) e la generazione degli stub.
+
+Un IDL deve consentire:
+- identificazione unica del servizio tra quelli possibili
+- definizione astratta dei dati da trasmettere in input e output
+- estendibilità con ereditarietà, binder e altre entità
+
+XDR (eXternal Data Representation)
+Si tratta del primo esempio di un IDL proprietario della SUN. 
+- definisce le operazioni remote e i parametri per generazione stub
+- l'utente sviluppa un file con la descrizione dei servizi
+- possibilità di versioni diverse, tipi primitivi e tipi definiti dall'utente
+
+Come posso generare gli stub a partire dall'XDR?
+Soluzione: RPCGEN (Remote Procedure Call Generator)
+E'un compilatore di protocollo RPC che genera procedure stud a partire dal file XDR definito dall'utente.
+
+RPC Binding
+Il binding è la fase che prevede come ottenere l'aggancio corretto tra i clienti e il server. Due possibili linee:
+- statico: La compilazione risolve ogni problema prima della esecuzione e forza un binding statico (nel distribuito) a costo limitato (ma poco flessibile) 
+- dinamico: Il binding dinamico ritarda la decisione alla necessità, ha costi maggiori, ma consente di dirigere le richieste sul gestore più scarico o presente in caso di sistema dinamico. Ogni chiamata richiede un collegamento dinamico. Spesso dopo un primo legame si usa lo stesso binding ottenuto come se fosse statico per questioni di costo
+
+ADDRESSING
+1) Esplicito: il cliente deve raggiungere un seritore in qualche modo, tramite multicast o broadcast
+2) Utilizzo di sistema di nomi (binder, broker, name server), in RPC SUN si chiama PortMapper.
+
+Il PortMapper deve fornire delle operazioni:
+- lookup: consultazione sistema per cercare riferimento remoto
+- register: registrazione entità
+- unregister: deregistrazione entità
+
+RPC non bloccanti
+Due punti di vista di progetto:
+- RPC a bassa latenza: trascurano il risultato diventando realmente asincrone. Es. Athena, SUN
+- RPC a througput elevato: fanno un check di conferma dopo X invii (batching)
+Es. Chorus, Mercury
+
+NOTE:
+
 RPC SUN: uso di BATCHING per le RPC non bloccanti.
 PortMapper: invio PROG, VERS, PROTOCOLLO e ricevo porta (NAME->PORT).
-DISPATCHING: procedura usata per smistare le richieste di chiamataa funzione. Viene legata al gestore di trasporto tramite NOMEPROG, VERSION. Passo al dispatcher richieste e gestore trasporto. Esiste sempre la procedura NULLPROC per l'echo.
+
+DISPATCHING: procedura usata per smistare le richieste di chiamata a funzione. Viene legata al gestore di trasporto tramite NOMEPROG, VERSION. Passo al dispatcher richieste e gestore trasporto. Esiste sempre la procedura NULLPROC per l'echo.
+
 Client: la free degli argomenti è a carico del programmatore. La creazone del gestore trasporto è a carico del programmatore che può scegliere UDP o TCP.
+
 RMI VS RPC: RMI non privilegia l'efficienza, il registry è il broker centrale ed è unico. Non ci sono broker multipli.
+
+(AGGIUNGERE APPUNTI SUL CONFRONTO RMI vs RPC !!!!!!)

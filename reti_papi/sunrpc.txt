@@ -1,41 +1,197 @@
---Slide SUN RPC--
-RPC SUN: infrastruttura di supporto SUN che viene inglobata nei processi di interazione remote call. Gestisce lo scambio di messaggi, l'eterogeneità dei sistemi e alcuni errori. Utilizzo semantica at-least-once.
-Open Network Computing: include XDR, RPCGEN, PortMapper, NFS.
-Contratto RPC: il contratto è esplicito sulle info scambiate. Necessario descrivere il contratto e i dati in un unico file .x.
-Vincoli RPC SUN: ogni definizione di procedura ha un solo parametro d'ingresso e un solo parametro d'uscita. ID con lettere MAIUSCOLE. Ogni procedura ha un numero di procedura unico all'interno del programma.
-Gestore di trasporto cliente è un riferimento ad un elemento di supporto: gestisce la comunicazione con il server in caso di default UDP.
-Il cliente deve conoscere l'host remoto dove è in esecuzione il servizio. Alucni informazioni per invocare il servizio: programma versione e nome dela procedura.
+﻿--Slide SUN RPC--
+
+RPC SUN
+Infrastruttura di supporto SUN che viene inglobata nei processi di interazione remote call. Gestisce lo scambio di messaggi, l'eterogeneità dei sistemi e alcuni errori. Utilizzo semantica at-least-once.
+
+Implementazione e supporto RPC di Sun: Open Network Computing
+Include XDR, RPCGEN, PortMapper, NFS (Network File System).
+
+Contratto RPC
+Le RPC sono basate su un contratto esplicito sulle informazioni scambiate, consiste du 2 parti:
+- definizioni di programmi RPC: identificazione servizi e tipo dei parametri
+- definizioni XDR: definizione dei tipi di dati dei parametri
+Necessario descrivere il contratto e i dati in un unico file .x.
+
+Vincoli RPC SUN
+- Ogni definizione di procedura ha un solo parametro d'ingresso e un solo parametro d'uscita
+- ID con lettere MAIUSCOLE
+- ogni procedura ha un numero di procedura unico all'interno del programma
+
+Il gestore di trasporto cliente è un riferimento ad un elemento di supporto: gestisce la comunicazione con il server. Il cliente deve conoscere:
+- l'host remoto dove è in esecuzione il servizio
+- alcune informazioni per invocare il servizio: programma versione e nome dela procedura
 Il cliente gestisce gli errori: uso della stampa clnt_perror
-Passi Sviluppo SUN RPC: 1) file.x 2) rpcgen 3) realizzare client e server 4) pubblicare i servizi lato server: attivazione portmapper e registrazione 5) reperire l'endpoint del server tramite portmapper, creando gestore client per l'interazione.
-Limiti: un argomento in ingresso ed uscita, di default il server è sequenziale. Fino alla ricezione del risultato il client è sospeso in modo sincrono bloccante. Deadlock: se il server richiede una call al client bloccato? Semantica at least once: si fanno un certo numero di ritrasmissioni.
-ID RPC: Numero di programma 32 bit 0-1fffffffh predefinito da SUN, 20000000h - 3fffffffh definibile dall'utente, 40000000h - 5fffffffh riservato all'APPLICAZIONE per generare dinamicamente numeri di programma, altri gruppi riservati, numero porte 16 bit soluzione aggancio dinamico.
-Autenticazione: sicurezza: identificazione client presso il server e viceversa sia in chiamata sia in risposta.
-Livello intermedio RPC: callrpc e registerrpc. CallRPC: chiama esplicita al meccanismo RPC e provoca l'esecuzione della procedura remota. RegisterRPC: associa un id unico alla procedura remota implementata nell'applicazione.
-int success = callrpc (char *remotehost, u_long n_prog, u_long n_vers, u_long n_proc, xdrproc_t xdr_arg, char *arg, xdrproc_t xdr_res, char *res) -> dato host remoto, numero programma, versione e procedura, argomento d'ingresso e buffer per argomento d'uscita, fornisce 0 se chiamata andata a buon fine. xdr_arg e xdr_res definiscono il tipo che verranno usate dalle funzioni XDR. In caso di errore restituisce un valore intero assocato ad un enum.
-XDR: si colloca a livello presentazione. Effettua (un)marshalling. I tipi atomici predefiniti e i tipi standard sono build-in. Per ogni informazione da trasmettere abbiamo bisogno di due trasformazioni. Sulla rete solo formato XDR.
-Funzioni di conversione: xdr_bool, ... xdr_void (nullo), xdr_opaque(raw data), xdr_array, xdr_vector (array a lunghezza fissa), xdr_string (sequenza di caratteri con terminatore NULL), xdr_bytes (vettore di bytes senza terminatore), xdr_reference, xdr_pointer(come reference ma con NULL), xdr_union.
+
+Passi Sviluppo SUN RPC
+1) definizione servizi e tipi di dati: file.x
+2) generazione automatica stub e funzioni conversione XDR: rpcgen
+3) realizzazione client e server, compilazione e linking
+4) pubblicazione servizi lato server: attivazione portmapper e registrazione
+5) reperirimento dell'endpoint del server tramite portmapper, creando gestore di trasporto client per l'interazione
+
+Diversi livelli di astrazione (flessibilità)
+- Utilizzo di servizi RPC standard          (alto)
+- Definizione ed utilizzo di servizi RPC    (intermedio)
+- Gestione avanzata del protocollo RPC      (basso)
+
+Limiti RPC Sun:
+- un argomento in ingresso ed uscita
+- di default il server è sequenziale. Fino alla ricezione del risultato il client è sospeso in modo sincrono bloccante. Deadlock: se il server richiede una call al client bloccato? Semantica at least once: si fanno un certo numero di ritrasmissioni.
+
+Identificazione di RPC
+Numero di programma 32 bit:
+- 0-1fffffffh predefinito da SUN: applicazioni di interesse comune
+- 20000000h - 3fffffffh definibile dall'utente: applicazioni debug servizi
+- 40000000h - 5fffffffh riservato alle applicazioni per generare dinamicamente numeri di programma
+- altri gruppi riservati
+
+numero porte 16 bit --> soluzione: aggancio dinamico. (?)
+Autenticazione: (sicurezza) identificazione client presso il server e viceversa sia in chiamata sia in risposta.
+
+--------------------------------------------------------------------------------
+
+Livello alto RPC
+Insieme di procedure pronte per essere invocate da un nodo all'altro, parliamo d i servizi standard: rnusers(), rstat(), getrpcport(), etc.
+
+Livello intermedio RPC
+Definizione e utilizzo di nuovi servizi RPC per procedure singole.
+Due primitive
+- callrpc(): chiamata esplicita al meccanismo RPC e provoca l'esecuzione della procedura remota
+- registerrpc(): associa un identificatore unico alla procedura remota implementata nell'applicazione
+
+Firma funzione callrpc()
+int success = callrpc (remotehost,n_prog,n_vers,n_proc,xdr_arg,arg,xdr_res,res) - char *remotehost: host remoto
+- u_long n_prog,n_vers,n_proc: identificazione procedura
+- xdrproc_t xdr_arg,xdr_res: tipo risultato
+- char *arg: argomento d'ingresso
+- char *res: argomento d'uscita
+La procedura restituisce 0 se chiamata andata a buon fine.
+
+Problema: l'XDR si colloca a livello presentazione, effettua (un)marshalling. I tipi atomici predefiniti e i tipi standard sono build-in. Per ogni informazione da trasmettere abbiamo bisogno di due trasformazioni. Sulla rete solo formato XDR.
+
+Soluzione: funzioni di conversione: xdr_bool, ... xdr_void (nullo), xdr_opaque(raw data), xdr_array, xdr_vector (array a lunghezza fissa), xdr_string (sequenza di caratteri con terminatore NULL), xdr_bytes (vettore di bytes senza terminatore), xdr_reference, xdr_pointer(come reference ma con NULL), xdr_union.
+
 Funzioni di conversione: restituiscono vero se la conversione ha avuto successo e hanno eseguito l'operazione. Possono funzonare anche con strutture: verrà creata da rpcgen la funzione di conversione apposita.
-Registrazione procedura remota: il server registra la procedura nella tabella DINAMICA dei servizi del nodo.
-int result = registerrpc (u_long n_prog, u_long n_vers, u_long n_proc, char *(* proc_name ), xdrproc_t xdr_arg, xdrproc_t xdr_res) -> proc_name è il puntatore alla procedura da eseguire, xdr_arg e xdr_res definiscono il tipo che verranno usate dalle funzioni XDR. Restituisce vero se la procedura è stata registrata nella tabella dinamica dei servizi.
-Dopo aver registrato le procedure, bisogna rimanere in attesa di chiamate: svc_run() -> ora il server si comporta come un demone.
-Corrispondenza dei nomi: la tabella port registra u_long n_prog, u_long n_vers, ma anche il PROTOCOLLO utilizzato e la PORTA. Il numero di procedura manca perché selezionabile alla invocazione e non in fase di registrazione.
-Portmapper: NPROG: 100000, VERS: 2, PORT: 111 (sia TCP sia UDP, due gestori di trasporto diversi). Si tratta del server di nomi ed è un server RPC: allocazione dinamica dei servizi sui nodi.
+
+--------------------------------------------------------------------------------
+
+Registrazione procedura remota: il server registra la procedura nella tabella DINAMICA dei servizi del nodo, con una entry del tipo: {identificatore, ptocedura} (es. {(0x20000015,1,1),Proc 5} )
+
+Firma funzione registerrpc()
+int result = registerrpc (n_prog,n_vers,n_proc,proc_name,xdr_arg,xdr_res) 
+- u_long n_prog,n_vers,n_proc: identificazione procedura
+- char *(* proc_name ) (): puntatore alla procedura da attivare
+- char *arg: argomento d'ingresso
+- char *res: argomento d'uscita
+Restituisce vero se la procedura è stata registrata nella tabella dinamica dei servizi.
+
+Dopo aver registrato le procedure, bisogna rimanere in attesa di chiamate: svc_run() (ora il server si comporta come un demone).
+
+Corrispondenza dei nomi
+La tabella registra u_long n_prog, u_long n_vers, ma anche il PROTOCOLLO utilizzato e la PORTA (tabella detta: Port Map).
+Il numero di procedura manca perché selezionabile alla invocazione e non in fase di registrazione.
+
+La gestione della tabella di port_map si basa su un processo unico per ogni nodo RPC detto port mapper che viene lanciato come demone (cioè in background).
+Il Portmapper è il server di nomi, lui stesso server RPC:
+- NPROG: 100000
+- VERS: 2
+- PORT: 111 (sia TCP sia UDP, due gestori di trasporto diversi)
+
 Limiti PortMapper: il cliente deve interrogare ogni volta il port mapper a causa della dinamicità.
-Architettura Livello Basso RPC lato server: creazione gestore di trasporto lato server, per mantenere collegamenti con clienti. Dispatching del messaggio RPC: per inoltrare la richiesta del client alla procedura corretta.
-Livello Basso RPC: rpc gestite tramite funzioni avanzate. Operazioni gestite in modo avanzato: svcudp_create() o svctcp_create: crea il gestore di trasporto.  pmap_unset() : distruzione di eventuali registrazioni precedenti di PROG, VERS, PROT. svc_register(): associazione di una tripla alla procedura di dispatching. svc_register e la svc_run possono essere implementate con un livello più basso.
-Livello basso RPC: bisogna creare il gestore di trasporto tramite svcudp_create e svctcp_create(). Restituiscono una struttura astratta SVCXPRT: continene puntatori alle operazioni sui dati, riferisce due socket e una porta: una per il protocollo di trasporto del server e una se richiesta a cui invare i risultati della call. Del caso di tcp vanno specificati le dimensioni dei buffer. Se il parametro vale RPC_ANYSOCK allora si crea una nuova socket. In caso di insuccesso NULL.
-Livello basso RPC: bisogna anche creare una procedura di dispatching da registrare per essere invocata per trovare la procedura richiesta. Uso di svc_register per associare la procedura di dispatching con un numero di prog vers e protocollo (tripla).
-bool_t svc_register (SVCXPRT *xprt, u_long prognum, u_long versnum, char (*dispatch((struct svc_req *request, SVCXPRT *xprt))), u_long protocol) -> Non ci sono indicazioni di tipi XDR solo all'interno dell'implementazione di ogni servizio.
-dispatching: contiene i riferimenti alle implementazioni dei servizi di un programma RPC: stesso gestore e stesso protocollo. Tramite  svc_getargs() si ricavano i parametri per l'esecuzione. Tramite svc_sendreply() si invia la risposta. NULLPROC esiste sempre e serve per l'echo. svcerr_noproc() se manca la procedura richiesta.
-client: deve creare un gestore di trasporto con CLIENT * clntudp_create(addr, prognum, versnum, wait, sockp) oppure CLIENT * clnttcp_create(addr, prognum, versnum, sockp, sendsz, recvsz) che restituiscono una struttura astratta CLIENT. lnttcp_create() non prevede timeout e definisce dimensione buffer di input e di output. Non ci sono riferimenti espliciti alle socket se non la struttura di addr che è sockaddr_in.
-enum clnt_stat clnt_call (CLIENT *clnt, u_long procnum, xdrproc_t inproc, char *in, xdrproc_t outproc, char *out, struct timeval tout) si chiama la procedura remota
-void clnt_perror (clnt,s) -> analizza il risultato della chiamata remota precedente.
-void clnt_destroy (clnt) -> da usare alla fine per terminare il gestore cliente.
-Union: usato quando nella stessa area di memoria ci finiscono tutti i tipi di dati: lettura della memoria con occhiali diversi.
-CLIENT * clnt_create (host, prog, vers, protocol) -> molto simile alle procedure di basso livello clntudp_Create e clnttcp_create ma lascia alcuni parametri a livello supporto RPC.
-variabili static: vengono salvate nel data segment: non vengono distrutte a chiamata finita (rimosse dallo stack). Sono visibili solo all'interno della funzione o del file.
-XDR: non è un linguaggio di programmazione ma un IDL: c'è ancora gcc dopo la generazione dei file. Non è preciso: bisogna controllare i sorgenti generati.
-In XDR non è possibile definire direttamente strutture innestate, ma bisogna sempre passare per definizioni di strutture intermedie: non si può generare matrici: bisogno di una struttura di supporto Riga.
-RPC: MODALITÀ ASINCRONA: A default RPC client sincrono con il server: se client usa TCP mettiamo timeout nullo, il servitore non deve prevedre una risposta (xdr-void).
-MODALITÀ ASINCRONA BATCH: Uso TCP. Timeout NULL in clnt_call. xdr_void in clntcall. Manca la chiamata svc_sendreply() lato server. Infine si fa una NULLPROC per vedere se ci sono stati errori.
+
+--------------------------------------------------------------------------------
+
+Livello Basso RPC
+
+Lato client: creazione e utilizzo gestore di trasporto
+Lato server: creazione gestore di trasporto per mantenere collegamenti con clienti e dispatching del messaggio RPC per inoltrare la richiesta del client alla procedura corretta.
+
+Server
+RPC gestite tramite funzioni avanzate per ottenere la massima capacità espressiva. Operazioni gestite in modo avanzato:
+- SVCXPRT *svcudp_create(): crea gestore UDP (default di SUN)
+- SVCXPRT *svctcp_create(): crea gestore TCP
+Il gestore di trasporto creato è una struttura dati astratta (SVCXPRT) che:
+- contiene puntatori alle operazioni sui dati
+- riferisce due socket e una porta (locale)
+
+Se il parametro vale RPC_ANYSOCK allora si crea una nuova socket. In caso di insuccesso NULL.
+
+Dispatching
+
+Bisogna anche creare una procedura di dispatching da registrare per essere invocata per trovare la procedura richiesta. Viene registrata come tutte le procedure mediante uso di svc_register() per associare la procedura di dispatching con un numero di prog vers e protocollo (tripla).
+
+Firma funzione svc_register()
+bool_t svc_register (xprt,prognum,versnum, dispatch,protocol)
+- SVCXPRT *xprt: gestore di trasporto
+- u_long prognum, versnum: identificazione della procedura
+- char (*dispatch((struct svc_req *request, SVCXPRT *xprt))): puntatore alla procedura di dispatching
+- u_long protocol: tipo di protocollo
+Non ci sono indicazioni di tipi XDR solo all'interno dell'implementazione di ogni servizio.
+
+La procedura di dispatching contiene i riferimenti alle implementazioni dei servizi di un programma RPC: stesso gestore e stesso protocollo.
+
+Tramite  svc_getargs() si ricavano i parametri per l'esecuzione.
+Tramite svc_sendreply() si invia la risposta.
+Tramite NULLPROC si verifica se il server è attivo.
+Tramite svcerr_noproc() se manca la procedura richiesta, si gestisce l'errore.
+
+Client
+Deve creare anche lui un gestore di trasporto con le funzioni:
+- CLIENT * clntudp_create(addr, prognum, versnum, wait, sockp)
+- CLIENT * clnttcp_create(addr, prognum, versnum, sockp, sendsz, recvsz)
+Restituiscono una struttura astratta CLIENT.
+La versione UPD specifica il timeout delle ritrasmissioni, mentre la versione TCP specifica la dimensione dei buffer in/out.
+Non ci sono riferimenti espliciti alle socket di trasporto se non la struttura di addr che è sockaddr_in.
+
+Chiamata della procedura remota
+enum clnt_stat clnt_call (CLIENT *clnt, u_long procnum, xdrproc_t inproc, char *in, xdrproc_t outproc, char *out, struct timeval tout) 
+- clnt: gestore di trasporto locale
+- procnum: identificazione della procedura
+- inproc: tipo di argomenti
+- outproc:  tipo di risultato 
+- in: argomento unico 
+- out: risultato unico 
+- tout: tempo di attesa della risposta
+
+void clnt_perror (clnt,s): analizza il risultato della chiamata remota precedente e stampa su stderr eventuali errori.
+void clnt_destroy (clnt):da usare alla fine per terminare il gestore cliente.
+
+--------------------------------------------------------------------------------
+
+Union: usato quando nella stessa area di memoria ci finiscono tutti i tipi di dati: lettura della memoria con occhiali diversi. (???)
+
+Creazione gestore di trasporto client (alternativo)
+
+CLIENT * clnt_create (host, prog, vers, protocol)
+Molto simile alle procedure di basso livello clntudp_Create e clnttcp_create ma lascia alcuni parametri a livello supporto RPC.
+
+Variabili static:
+Quali effetti produce la keyword static e perché è necessario dichiarare il risultato come variabile static?
+
+Visibilità
+- sono visibili dovesono state definite: funzioni o moduli (file)
+- NON sono visibili all'esterno
+Tempo di vita
+- allocazione globale
+- tempo di vita pari al programma
+- permane oltre la singola invocazione della procedura(salvate nel Data Segment)
+- ogni invocazione utilizza il valore precedente della variabile
+
+IMPORTANTE: il valore di ritorno di una procedura remota deve essere static in modo da essere disponibile per marshalling e spedizione quando la procedura termina. Altrimenti verrebbe rimosso dallo stack.
+
+XDR: non è un linguaggio di programmazione ma un IDL, infatti non viene supportato da un vero compilatore e soprattuto non è preciso, infatti bisogna controllare i sorgenti generati.
+In XDR non è possibile definire direttamente strutture innestate, ma bisogna sempre passare per definizioni di strutture intermedie: ad esempio non si possono generare matrici ma ho bisogno di una struttura di supporto Riga.
+
+RPC MODALITÀ ASINCRONA
+A default il client RPC è sincrono con il server: se client usa TCP mettiamo timeout nullo il client può continuare immediatamente l'esecuzione, il servitore non deve prevedere una risposta (xdr-void).
+
+MODALITÀ ASINCRONA BATCH
+Implementativamente:
+- impiego del protocollo TCP
+- valore nullo del timeout nella primitiva clnt_call
+I due parametri del cliente:
+- risultato NULL e funzione xdr_void() in clnt_call()
+- ogni chiamata non prevede risposta: manca la chiamata svc_sendreply() 
+ Infine si fa una NULLPROC per vedere se ci sono stati errori.
+
 svc_freeargs(transp,xdr_wrapstring,&s); funzione a basso livello per dallocare gli argomenti acquisiti con  svc_getargs().

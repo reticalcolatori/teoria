@@ -1,63 +1,253 @@
---SLIDE INTERNET--
+﻿--SLIDE INTERNET--
+
+Internet nasce dalla idea di potere interconnettere tutte le reti in una unica globalità (il migliore dei mondi possibili).
+
+Broadcast/Multicast
+NON sono consentiti broadcast a livello globale per evitare un costo inaccettabile vista la dimensione del sistema. 
+Si possono però fare dei broadcast verso gli host della rete locale o verso gli host di una specifica rete.
 Multicast Internet: utilizzando indirizzi di classe D è possibile lanciare messaggi di multicast ad utenti registrati all'indirizzo.
-ARP (Address Resolution Protocol): Protocollo LOCALE per ricerca dell'indirizzo fisico attraverso l'utilizzo dell'indirizzo logico: Who has 192.168.1.1? Said 22:cc:dd:44:55:66. Possibilità di cache (arp table) per ridurre sovraccarico rete.
-ARP Attivo: faccio da client, richiedo indirizzo fisico associato.
-ARP Passivo: faccio da server, se la richiesta riguarda il mio indirizzo rispondo.
+
+--------------------------------------------------------------------------------
+
+ARP (Address Resolution Protocol)
+Protocollo dinamico LOCALE (basato su broadcast) per ricerca dell'indirizzo fisico in un nodo partendo dal suo indirizzo logico.
+(es. Who has 192.168.1.1? Said 22:cc:dd:44:55:66)
+Partendo dal presupposto che i protocolli devono tenere conto dei costi di esercizio, viene utilizzata una memoria cache (arp table) per mantenere le associazioni {indirizzo IP-indirizzo MAC} e quindi ridurre sovraccarico rete.
+
+Ruoli nel protocollo ARP
+- ARP Attivo: faccio da client, esamino cache altrimenti eseguo broadcast per richiedere indirizzo fisico associato.
+- ARP Passivo: faccio da server, se la richiesta riguarda il mio indirizzo 
+rispondo.
+
 ARP table poisoning: manometto la arp table di un host in modo da redirigere il traffico verso un altro host. 
-RARP: protocollo inverso utilizzato in precedenza per fornire un indirizzo logico alle macchine diskless.
-DHCP(Dynamic Host Configuration Protocol): protocollo per l'assegnazione dinamica di indirizzi ip. Consente l'assegnazione di una configurazione completa per l'accesso alla rete locale (anche intralocale se previsto). Risparmio IP: assegnazione temporale.
-Funzionamento DHCP: 1) DHCPDiscover: in broadcast si richiede un ind ip. 2) DHCPOffer i server rispondo con delle offerte. 3) DHCPRequest: il client seleziona l'offerta, può mandare in broadcast la selezione. 4) DHCPACK il server risponde con un ack.
-DHCPLEASE: il client vuole prolungare l'affitto.
-DHCPRELEASE: il client vuole rilasciare l'indirizzo.
-NAT: Network Address Translation usato per traslare indirizzi privati in indirizzi pubblici.
-PNAT: utilizziamo le porte per traslare molti indirizzi logici privati in un solo indirizzo pubblico.
-ICMP (Internet Control Message Protocol): consente di inviare all'host sorgente condizioni anomale (controllo, errore etc) sul datagramma inviato. Solo l'host sorgente viene informato non nodi intermedi.
-Strumenti associati a ICMP: ping, traceroute(TimeToLive crescente, ogni perdita forza un messaggio ICMP (se previsto dal nodo lanciatore)). Assumiamo che non cambi la tabella di routing per traceroute.
-UDP (User Datagram Protocol): servizio unreliable e connectionless. Praticamente aggiunge le porte all'ip e un checksum. Alcuni numeri di porta sono assegnati da Autorità centrale. Altri sono disponibili per il binding dinamico.
+
+RARP (Reverse Address Resolution Protocol) (DEPRECATO)
+Attua la ricerca di indirizzo IP per i nodi che non conoscono il proprio indirizzo IP e conoscono solo il proprio indirizzo MAC, ovvero per le macchine diskless (quelle che non hanno memorizzato su disco il loro IP assegnato).
+Posso avere server multipli per RARP, ma nel caso come evito le interferenze?
+- modello dinamico: risponde solo il server primario, gli altri rispondono solo se arriva una seconda richiesta
+- modello statico: il primario risponde immediatamente, gli altri dopo un certo ritardo calcolato
+
+--------------------------------------------------------------------------------
+
+DHCP (Dynamic Host Configuration Protocol)
+Protocollo per l'assegnazione dinamica di indirizzi ip. Consente l'assegnazione di una configurazione completa per l'accesso alla rete locale in maniera dinamica, evitando l'assegnazione statica di IP (che magari non sono usati in quel momento!!)
+
+Funzionamento DHCP (bidding protocol a 4 fasi)
+1) DHCPDiscover: in broadcast si richiede un indirizzo IP
+2) DHCPOffer: i server DHCP rispondono con diverse offerte
+3) DHCPRequest: il client sceglie l'offerta (può mandare in broadcast la scelta)
+4) DHCPACK il server risponde con un ack
+5) DHCPLEASE: il client vuole prolungare l'affitto
+6) DHCPRELEASE: il client vuole rilasciare l'indirizzo
+
+--------------------------------------------------------------------------------
+
+NAT (Network Address Translation) 
+Usato per traslare indirizzi privati in indirizzi IP globali (pubblici).
+Permette di mantenere un riferimento tra indirizzi interni ad una rete con quelli esterni usando tabelle di corrispondenza sul router NAT.
+
+
+NAT a porte
+PNAT: utilizziamo le porte per traslare molti indirizzi logici privati in un solo indirizzo pubblico. Questo passaggio è fondamentale, poichè permette di risparmiare un'immmensa quantità di indirizzi pubblici.
+L'idea nasce dal fatto che gli indirizzi IP pubblici (IPV4) sono limitati ed in esaurimento.
+
+--------------------------------------------------------------------------------
+
+ICMP (Internet Control Message Protocol)
+Protocollo di gestione che consente di inviare all'host sorgente di un messaggio, eventuali  condizioni anomale (controllo, errore etc) sul datagramma inviato. Solo l'host sorgente viene informato non nodi intermedi.
+
+Il messaggio ICMP contiene sempre l'header e i primi 64 bit dell'area dati del datagramma che ha causato il problema. I campi type e code contengono informazioni per il mittente su eventuali errori.
+
+Strumenti associati a ICMP
+- ping: consente di stimare il Round Trip Time (RTT)
+- traceroute o tracert: consente di visualizzare il percorso da un nodo ad un altro inviando messaggi con TimeToLive crescente, ogni perdita forza un messaggio ICMP (assumiamo che non cambi la tabella di routing per traceroute)
+
+--------------------------------------------------------------------------------
+
+UDP (User Datagram Protocol)
+Protocollo di trasporto best-effort e a basso costo.
+Servizio unreliable e connectionless. Praticamente aggiunge le porte e un checksum all'ip.
+
+I messaggi UDP sono composti di header e area dati, con header composto solo di porte e lunghezza messaggio e checksum.
+Uno datagramma è del tutto contenuto nell'area dati del datagramma IP, senza nessuna frammentazione.
+
+Alcuni numeri di porta sono assegnati da Autorità centrale. Altri sono disponibili per il binding dinamico.
 Esempi: 69: ttfp (Trivial Transfer File Protocol), 111 RPC Sun.
-TCP (Transfer Control Protocol): protocollo di livello transporto di tipo at most once.
+
+--------------------------------------------------------------------------------
+
+TCP (Transfer Control Protocol)
+Protocollo di livello transporto con semantica at most once.
 La connessione è la quadrupla {host1, port1, host2, port2}.
-ARQ: Automatic Repeat reQuest: 1 richiesta 1 risposta. Affidabilità aspettare che ilricevente abbia ricevuto, asincronismo: non aspettare troppo. ARQ: stop and wait con ack del messaggio. In caso di insuccesso ristrasmissione con timeout.
+
+ARQ (Automatic Repeat reQuest)
+1 richiesta 1 risposta. 
+Affidabilità aspettare che il ricevente abbia ricevuto
+Asincronismo: non aspettare troppo.
+Protocollo stop and wait con ack del messaggio. In caso di insuccesso ritrasmissione con timeout.
 Obiettivo dei protocolli è ottenere il massimo della qualità, cioè asincronicità e della autonomia di decisione tra i pari che devono comunicare.
-Continuos reuqests: non attesa in modo sincrono dell'ack, ma si mandano messaggi in modo ripetuto. Attesa del mittente solo a finestra piena. Sliding window quando arriva ack. Più complesso di ARQ: le conferme sono overhead: piggybacking in full-duplex. Ho due sliding window.
-Selective retransmission: ritrasmetto solo i pacchetti persi tenendo degli ack e degli nack. Go back-n: attesa di ack e ritrasmissioni tenendo conto di ack. Il mittente scarta i messaggi successivi non in sequenza e li rimanda tutti.
+
+Continuos reuqests
+Non attesa in modo sincrono dell'ack, ma si mandano messaggi in modo ripetuto. Attesa del mittente solo a finestra piena. La finestra scorre solo alla ricezione di un ack ed eliminazione del messaggio più vecchio inviato.
+Più complesso di ARQ: le conferme sono overhead: piggybacking in full-duplex. Ho due sliding window. (AGGIUNGERE APPUNTI IN AULA)
+
+Selective retransmission: ritrasmetto solo i pacchetti persi tenendo degli ack e degli nack.
+Go back-n: attesa di ack e ritrasmissioni tenendo conto di ack. Il mittente scarta i messaggi successivi non in sequenza e li rimanda tutti.
 TCP usa go-back-N e ack cumulativi.
-Sliding window: nei protoclli continuos reuqest per ogni direzione esiste una sliding window per la gestione del buffer. La decisione della dimensione del bffer è sempre del ricevente che deve allocarla e mantenerla in memoria.
-TCP: realiable stream full duplex. Connessione virtuale biridizionale. Connessione end-to-end. Stream è in ordine preciso e non alterabile. Banda illimitata per i dati normali. Banda limitata 1 byte per i dati urgent (expedited). Il tcp non impegna i nodi intermedi.
-Il protocollo tcp ha alcuni principi: formato dei dati trasmessi: segmenti con header fissato. Possibilità di dati urgenti. Regole per la bufferizzazione e l'invio di ack (sliding window), possibilità di comporre messaggi e decomporre in segmenti. Meccanismi di de/multiplexing attraverso la porta per distinguere i processi.
+
+Sliding window: nei protocolli continuos reuqest per ogni direzione esiste una sliding window per la gestione del buffer.
+La decisione della dimensione del buffer è sempre del ricevente che deve allocarla e mantenerla in memoria.
+Mittente TX: (NumLastMess – NumLastAck + 1 <= TXWinSize)
+Ricevente RX: (NumAcceptableMess – NumWaitedMess + 1 <= RXWinSize)
+
+TCP
+- realiable stream full duplex
+- connessione virtuale biridizionale.
+Connessione end-to-end. Stream è in ordine preciso e non alterabile. Banda illimitata per i dati normali. Banda limitata 1 byte per i dati urgent (expedited). Il tcp non impegna i nodi intermedi.
+
+Il protocollo tcp ha alcuni principi:
+- formato dei dati trasmessi: segmenti con header fissato
+- possibilità di dati urgenti
+- regole per la bufferizzazione e l'invio di ack (sliding window)
+- possibilità di comporre messaggi e decomporre in segmenti
+- meccanismi di de/multiplexing attraverso la porta per distinguere i processi
+
 Realizzazione del tcp si basa sulla implementazione della connessione e sulla comunicazione permettendo servizi che devono occuparsi di stabilire la connessione, scambio dati, chiusura connessione.
-Header TCP: 5 parole almeno 5 parole più eventuali opzioni: Porte, seq number, ack number, header length, code bit, window length, checksum (anche ind ip), urgent pointer, options, padding.
-CodeBit: URG, ACK, PUSH, RST, SYN, FIN.
+
+Header TCP
+Almeno 5 parole da 4 byte (tot 20 byte) più eventuali opzioni:
+- source port
+- destination port
+- sequence number
+- ack number
+- header length
+- code bit
+- window length
+- checksum
+- urgent pointer
+- options
+- padding
+
+CodeBit: 
+- URG: dato urgente nel flusso, il campo urgent pointer segnala la distanza
+- ACK: ack nel segmento, nel campo relativo
+- PUSH: segnala invio immediato segmento
+- RST: segnala di resettare di una connessione 
+- SYN: si stabilisce la connessione
+- FIN: termine della connessione
+
 Perdita TCP: tipicamente 1/100000 pacchetti in condizioni normali.
-TCP può spezzare i messaggi applicativi in segmenti di dimensione variabili e tende a frammetare i messaggi in segmenti di giusta dimensione. TCP usa continuos request per efficienza e affidabilità + piggybacking (se full-duplex).
-Usa sliding window fino a saturare la finestra. Uso di Go-Back-N in caso di non ricezione.
+TCP può spezzare i messaggi applicativi in segmenti di dimensione variabili e tende a frammetare i messaggi in segmenti di giusta dimensione.
+TCP usa continuos request per efficienza e affidabilità + piggybacking (se full-duplex).
+Uso di sliding window fino a saturare la finestra.
+Uso di Go-Back-N in caso di non ricezione.
+
 TCP Riassunto: sliding window data dal ricevente, byte per la dimensione della finestra, ack cumulativi, in caso di perdita go back n, ritarda i messaggi: raggruppamento in un segmento di dimensione sufficiente, piggybacking: ack ritardati in attesa di dati da inviare.
-Fasi TCP: 3 way handshake, comunicazione: transitorio, in fase esplorativa di banda e a regime: considerando varie condizioni operative come la congesione, fase finale chiusura mono e bidirezionale. 
-Nella 3 way handshake si fa una negoziazione su : seq number, timeout (tramite RTT), numero di porta, finestra di ricezione, MSS: Maximum Segment Size, dimensione del blocco di dati massimo da inviare default 536, fattore di scala della finestra.
-Nell'apertura non si scambiano i dati. ACK: dice il prossimo byte da ricevere: mi aspetto x+1.
+
+Fasi TCP 
+- fase iniziale: 3 way handshake tra le due driver di protocollo
+- fase comunicazione: fase esplorativa di banda seguita da comunicazione a regime considerando varie condizioni operative come la congesione
+- fase finale: chiusura mono e bidirezionale.
+
+Come avviene il 3 way handshake?
+1) A invia un segmento SYN a B (con valore iniziale X)
+2) B risponde con un SYN+ACK (con valore iniziale Y)
+3) A conferma la ricezione con un segmento ACK 
+
+Nella 3 way handshake si fa una negoziazione su:
+- seq number
+- timeout (tramite RTT)
+- numero di porta
+- finestra di ricezione
+- MSS: Maximum Segment Size
+- dimensione del blocco di dati massimo da inviare (default 536)
+- fattore di scala della finestra
+
+Nell'apertura non si scambiano i dati.
+ACK: dice il prossimo byte da ricevere: mi aspetto x+1.
 Possibile azioni simultanee di apertura da parte di due entità che vorrebbero stabilire una sola connessione.
-Chiusura: 4 fasi: si prevede una semplice operazione di chiusura graceful. Chiusura monodirezione output. TCP permette il passaggio di ack nel canale chiuso: no piggybacking. TCP permette la comunicazione nel verso opposto fino all'arrivo di FIN. L'utimo passo è l'ack del fin e la chiusura totale della connessione con rilascio delle risorse.
-Chiusura: I dati in uscita terminano tutti in modo controllato e sono tutti consumati. Non ci sono dati in ingresso non processati dal pari corrispondente.
-n caso di close invece, chi chiude attua sia una chiusura in out sia una chiusura in in, rendendo inutili le trasmissioni dei dati che non accetta più in input.
-TCP come AUTOMA A STATI: CLOSED, LISTEN, SYN RCVD, SYN SENT, ESTABLISHED, FIN WAIT1, FIN WAIT 2, TIMED WAIT -> timeout di cortesia per pacchetti in giro si cambia con setLinger, CLOSING, CLOSE WAIT, LAST ACK. Si parte da CLOSED e si finisce in CLOSED.
-Gestione fasi anomale: sono considerati eventi anomali possibili fallimenti ripetuti. Si può gestire con un segmento RST  per abortire la connessione stessa. Tipicamente si attua un reset per tentare un ripristino o chiudere del tutto. Solo in caso di guasto e di azioni ripetute di recovery si decide di abortire in modo unilaterale.
-TCP: iniziale: si deve tener conto della situazione transitoria per non porre problemi di congesione alla rete: esplorazione della banda.
-TCP: regime: a regime si fanno continui aggiornamenti dei valori in base alla situazione corrente rilevata.
-Calcolo RTT: si ricalcola ad ogni segmento, in base al tempo di percorrenza medio andata e ritorno. Formula Karn: Timeout = coeff1 * RTT precedente + coeff2 * RTT attuale -> ne troppo conservativo, se troppo reattivo.
-Il timeout principale viene continuamente ricalcolato: multiplo di 100, 200, 500 ms: il ricalcolo si fa solo in caso di successo senza ritrasmissione.
-Altri timeout: 1) timeout del ricevente per limitare il ritardo massimo da piggybacking: dopo il timeout si invia ack anche senza dati. 
-2) Timeout del mittente per limitare il ritardo massimo da buffering dei dati applicativi: dopo il timeout si invia i dati.
-3) Gli end point hanno timeout per il buffering dei dati in ricezione, dopo timeout si notifica una lettura. 
-4) Gli end point hanno il timeout molto lungo di keep-alive.
-Flow control: finestra indica le esigenze di memoria del ricevente, win=0 nessun messaggio. Ogni pari comunica all'altro la finestra di ricezione. Si deve inviare l'invio di messaggi corti: se window limitata si imposta win=0 (silly window).
+
+Chiusura (4 fasi)
+Si prevede una semplice operazione di chiusura graceful (chiusura monodirezionale output)
+TCP permette il passaggio di ack nel canale chiuso: no piggybacking.
+TCP permette la comunicazione nel verso opposto fino all'arrivo di FIN.
+
+Come avviene la chiusura?
+1) A finisce di inviare i dati che vuole trasmettere e invia un segmento FIN
+2) B riceve il FIN e risponde con un ACK (x+1)
+3) B termina di inviare tutti i dati che deve e solo alla ricezione dell'ultimo Ack di A, invia finalmente un segmento FIN
+4) A risponde con un ACK (y+1)
+
+Shutdown Output: i dati in uscita terminano tutti in modo controllato e sono tutti consumati, non ci sono dati in ingresso non processati dal pari corrispondente.
+Close: chi chiude attua sia una chiusura in out sia una chiusura in in, rendendo inutili le trasmissioni dei dati che non accetta più in input.
+
+TCP può essere interpretato come una macchina a STATI:
+CLOSED, LISTEN, SYN RCVD, SYN SENT, ESTABLISHED, FIN WAIT1, FIN WAIT 2, TIMED WAIT, CLOSING, CLOSE WAIT, LAST ACK.
+Si parte da CLOSED e si finisce in CLOSED.
+
+Gestione fasi anomale
+Sono considerati eventi anomali possibili fallimenti ripetuti.
+Si può gestire con un segmento RST per abortire la connessione stessa. Tipicamente si attua un reset per tentare un ripristino o chiudere del tutto. Solo in caso di guasto e di azioni ripetute di recovery si decide di abortire in modo unilaterale.
+
+TCP iniziale vs TCP regime
+Inizialmente si deve tener conto della situazione transitoria per non porre problemi di congesione alla rete: esplorazione della banda.
+A regime si fanno continui aggiornamenti dei valori in base alla situazione corrente rilevata.
+
+Calcolo RTT: si ricalcola ad ogni segmento, in base al tempo di percorrenza medio andata e ritorno.
+ Formula Karn: Timeout = coeff1 * RTT precedente + coeff2 * RTT attua9le (nè troppo conservativo, nè troppo reattivo)
+
+Il timeout principale viene continuamente ricalcolato: multiplo di 100, 200, 500 ms (il ricalcolo si fa solo in caso di successo senza ritrasmissione)
+
+Altri timeout
+1) timeout del ricevente per limitare il ritardo massimo da piggybacking: dopo il timeout si invia ack anche senza dati
+2) timeout del mittente per limitare il ritardo massimo da buffering dei dati applicativi: dopo il timeout si invia i dati
+3) Gli end point hanno timeout per il buffering dei dati in ricezione, dopo timeout si notifica una lettura
+4) Gli end point hanno un timeout (molto lungo) di keep-alive
+
+--------------------------------------------------------------------------------
+
+Flow control
+- finestra: indica le esigenze di memoria del ricevente, win=0 nessun messaggio. Ogni pari comunica all'altro la finestra di ricezione.
+- si deve evitare l'invio di messaggi corti: se window limitata si imposta win=0 (silly window).
+
 Algoritmo di Nagle: si ammette di avere pendente senza ack al più un solo messaggio corto. Di solito disabilitato.
+
 Urgent pointer: riferito al seq del pacchetto, il byte a cui punta si potrebbe trovare in un altro segmento ancora da spedire.
+
 TCP regime normale: ogni segmento invia info di controllo al pari: seq, ack, window. Il ricevente adegua i parametri di sliding window, timeout tramite RTT. La connessione TCP non usa risorse se non si inviano messaggi (apparte keep-alive)
-TCP congestione: caso congestione considerato distruttivo per tcp. Basta un timeout principale per attivare la condizione di congestione.
-Per recovery si devono attuare azioni locali per evitare il problema e di scongiurare la congestione: il mittente dimezza la finestra di invio e raddoppia il timeout. Al termine slow start (situazione transitoria di esplorazione). 
-Slow start è anche la politica per evitare la congestione iniziale (avoidance) Variazioni vengono fatte in modo dolce. Se mandassimo subito tutto il flusso la rete finirebbe per congestionarsi.
-Congestion control: meccanismi di controllo della congestione usando rwnd receiving window e cwnd congestion window. ssthresh soglia di slow start dopo il quale si fa congestion avoidance.
-Slow Start: transitorio sulla finestra cwnd per esplorare la banda. rwnd è il valore a REGIME!!. fase esponenziale iniziale, fase lineare sopra ssthreshold.
-In caso di evento rilevato di congestione: cwnd=1, sshthresh=cwndPrec/2 e si riparte con slow start.
-In caso di 3dup: si dimezza cwnd e si raddoppia il timeout (Fast recovery). In caso di timeout ripetuti si riparte con slow start.
-Strategie tipiche: ricalcolo timeout in modo dinamico tramite RTT. Exponential back-off: in caso di ritrasmissione il timeout raddoppia fino ad un tempo massimo (tipicamente 4 secondi) poi si chiude. Silly window, limiti al time-wait per limitare la durata delle risorse. Long fat pipes: per mantenere piene le pipe a banda elevata.
+
+TCP congestione
+Il caso di congestione è considerato CRITICO per TCP. Basta un timeout principale per attivare la condizione di congestione.
+La congetione può essere dovuta ai soli endpoint oppure all'intera situazione della rete. 
+Per recovery si devono attuare azioni locali per evitare il problema e scongiurare la congestione: il mittente dimezza la finestra di invio e raddoppia il timeout. Al termine slow start (situazione transitoria di esplorazione). 
+
+Slow start è anche la politica per evitare la congestione iniziale (congestion avoidance) Variazioni vengono fatte in modo dolce. Se mandassimo subito tutto il flusso la rete finirebbe per congestionarsi.
+
+Congestion control
+Meccanismi di controllo della congestione usando
+- RWND receiving window
+- CWND congestion window
+ssthresh: soglia di slow start dopo il quale si fa congestion avoidance.
+
+Slow Start
+E'l'algoritmo che definisce la fase di transito per esplorare la banda.
+Fase esponenziale sotto ssthreshold, fase lineare sopra ssthreshold fino a raggiungere la RWND.
+
+In caso di evento di congestione rilevato:
+- cwnd = 1
+- sshthresh = CWND/2 
+- si riparte con slow start
+
+In caso di 3dup:
+- si dimezza cwnd 
+- si raddoppia il timeout (Fast recovery).
+
+In caso di timeout ripetuti
+- si riparte da 1 con algoritmo slow start
+
+Strategie tipiche:
+- ricalcolo timeout in modo dinamico tramite RTT
+- exponential backoff: in caso di ritrasmissione il timeout raddoppia fino ad un tempo massimo (tipicamente 4') poi si chiude
+- silly window
+- limiti al time-wait per limitare la durata del mantenimento delle risorse.
+- long fat pipes: per mantenere piene le pipe a banda elevata. (?)
