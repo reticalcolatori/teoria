@@ -1,0 +1,137 @@
+﻿PROGRAMMAZIONE DI SISTEMA
+- definizione
+- tipologia: monolitica vs microservizi
+- semantica: imperativa vs dichiarativa
+- deployment: fasi statiche vs fasi dinamiche
+- principi di progetto
+- principi di scelta strutture dati
+- file
+- semplicità algoritmi e minimizzazione risorse
+- filtro e I/O in C
+
+GENERALITA' E MODELLI
+- protocollo: definizione, e diffusione UNIX come standard
+- modello Client/Server: definizione, caratteristiche a default: sincrono, bloccante, asimmetrico, dinamico, 1-N (uno a molti)
+- modello pull vs modello push
+- modello a delegazione
+- modello a scambio di messaggi
+- modello ad agenti multipli
+- C/S con connessione vs C/S senza connessione
+- implementazione:
+ visibilità: modello globale vs modello locale
+ stato: server stateless vs server stateful
+ cncorrenza: server sequenziale vs server concorrente (parallelo)
+- sistemi di nomi: definizione, nomi trasparenti vs nomi non trasparenti
+- binding: definizione procedura, statico vs dinamico, efficienza, partizionamento
+- x.500 (directory): definizione CCITT standard, realizzazione, caratteristiche e funzionamento
+
+PROGRAMMAZIONE DI RETE IN JAVA
+- socket: definizione e obiettivo
+- tipologie di comunicazione: con connessione vs senza connessione
+- socket datagram: utilizzo, primitive, pacchetti
+- multicast socket: funzionamento, primitive
+- socket stream: utilizzo, semantica, distinzioni classi C/S, chiusura: shutdown vs close, conseguenze, opzioni
+
+PROGRAMMAZIONE DI RETE IN C
+- obiettivo, uniformità con file, caratteristiche socket BSD, tipologie servizio
+- half-association , dominio, funzioni supporto ai nomi
+- primitive preliminari: socket, bind
+- socket datagram: semantica, protocollo comunicazione, affidabilità
+- presentazione dati: funzioni di conversione little-endian vs big-endian
+- socket stream: semantica, protocollo comunicazione
+- primitive: socket, bind, connect, listen, accept, send, recv
+- I/O livello applicativo vs I/O livello trasporto
+- chiusura: shutdown vs close, conseguenze
+- opzioni: reuseaddr, linger, sndbuf, recvbuf, sendtimeo, recvtimeo
+- socket asincrone: funzionamento, implementazione
+- attese multiple: select, funzionamento primitiva, maschere, timeout
+
+SERVIZI APPLICATIVI
+- diffusione internet, meccanismo vs strategia, protocolli standard vs UNIX
+- proprietà fondamentali delle implementazioni
+- telnet: obiettivo, caratteristiche, compito client vs compito server, eterogeneità dei terminali, NVT, implementazione NVT
+- rlogin: definizione, caratteristiche, confronto con telnet
+- trasferimento file: ftp vs tftp
+- ftp: caratteristiche, codifica numerica informazioni, ftp anonymous, connessioni: controllo e dati, ossibilità di stato
+- e-mail:  caratteristiche, struttura messaggi, MIME: definizione, architettura modello agenti ed entità, ciclo trasferimento mail: routing tra MTA, protocollo SMTP, usenet, NNTP
+
+STANDARD DI COMUNICAZIONE: OSI
+- definizione, idea alla base dello sviluppo dello standard
+- caratteristiche, architettura, visione: verticale vs orizzontale, livelli
+- entità logiche: SDU/IDU/SAP, meccanismi vs implementazione
+- osi connectionless vs osi connection oriented
+- primitive: tipologie (data, connect, disconnect) e forme (request, indication, response, confirm)
+- OSI vs TCP/IP
+- livello network: obiettivo, compiti
+- livello transport: obiettivo, protocolli con/senza connessione, upward e downward de/multiplexing, primitive (T-connect, T-data, T-expedited-data, T-disconnect)
+- livello session: obiettivo, caratteristiche, primitive (58), concetto di token e punti di sincronizzazione maggiori e minori
+- livello presentation: problema codifica informazioni, obiettivo, rappresentazione dati e funzioni di conversione, accordo astratto (ASN.1), accordo concreto (BER), protocollo di negoziazione (bidding)
+- livello application: obiettivo, modello a oggetti, esempi: x.500, VT, etc.
+
+RMI
+- definizione, sintassi e semantica rispetto a chiamata locale, riferimento remoto, contratto e proxy
+- garbage collector distribuito e implicazioni
+- livello RRL e TL
+- registry e implementazione e utilizzo RMI
+- serializzazione e un/marshalling, passaggio parametri nel distribuito
+- stub e skeleton: compiti e gestione processi
+-RMI class loading: problema e soluzione, classloader: come funziona, problemi di sicurezza, security manager, policy 
+- conclusioni 
+
+CHIAMATE REMOTE
+- semantica comunicazione: may-be, at-least-once, at-most-once, exactly-once
+- rpc: obiettivo, differenze con chiamata locale, proprietà, politiche accettazione risposta, gestione dei guasti
+- ONC e NCA: cosa sono, come funzionano gli stub, marshalling
+- IDL: definizione, caso XDR di Sun, rpcgen
+- RPC binding: definizione, statico vs dinamico
+- addressing: funzione del portmapper e dispatching
+
+RPC DI SUN
+- funzione, obiettivo performance
+- contratto RPC: programmi e tipi di dati
+- vincoli RPC: parametri, maiuscole, numero procedura
+- Passi di sviluppo RPC: xdr, rpcgen, compilazione, pubblicazione e attivazione portmmapper, reperimento endpoint, creazione gestore di trasporto
+- semantiche possibili: at-least-once di default per efficienza
+- 3 astrazioni 
+- livello alto RPC (servizi standard)
+- livello intermedio RPC: callrpc, registerrpc, problemi conversione dati, soluzione un/marshalling con funzioni di conversione create da rpcgen, registrazione procedura nel portmapper (tripla), svc_run
+- livello basso RPC
+server: svcudp_create, svctcp_create, struttura dati astratta SVCXPRT, procedura di dispatching e funzionamento
+client: clntudp_create, clnttcp_create, struttura dati astratta CLIENT, chiamata remota: clnt_call e tempo attesa timeout, clnt_perror, clnt_destroy
+- variabili static: perchè si usano? (visibilità e tempo di allocazione) 
+- RPC asincrona batch: utilizzo tcp, timeout nullo, no risposta, nullproc per vedere se ci sono stati errori o se va tutto bene (keepalive)
+- svc_freeargs a carico di supporto o utente
+
+SISTEMI DI NOMI
+- proprietà sistemi di nomi, problema entità eterogenee, livelli di nomi: nome, indirizzo, route
+- spazio di nomi: flat, partizionato, descrittivo e relative caratteristiche
+- name server: obiettivo, operazioni (quert, add tuple, modify/delete tuple enumerate)
+- gestione dei nomi: distribuzione e risoluzione
+- distrubuzione: come avviene, politiche di clustering
+- risoluzione: fasi: trovare, verificare, eseguire
+- x.500: definizione CCITT, che cos'è, cosa lo distingue, notazioni:DN e RDN, agenti (DUA e DSA) e protocolli (DSP e DAP), come funziona il ciclo di ricerca
+- database vs directory (differenze strutturali e di ricerca)
+
+
+INTERNET E PROTOCOLLI
+- scopo diffusione internet
+- broadcast e multicast: locale vs globale
+- ARP: definizione, funzionamento protocollo, arp table per efficienza, arp table poisoning
+- RARP: deprecato, funzionamento, macchine diskless, modello statico vs dinamico per interferenze
+- DHCP: definizione, fasi funzionamento: discover, offer, request, ack, lease, release
+- NAT: scopi: moltiplicazione indirizzi e porte.
+- ICMP: definizione, strumenti associati: ping e traceroute
+- UDP: semantica, caratteristiche, vantaggi: velocità, semplicità e svantaggi: affidabilità
+- TCP: semantica, caratteristiche, quadrupla
+ fasi connessione virtuale:
+	 3way hand-shake: syn, syn+ack, ack,
+	 scambio dati,
+	 chiusura 4 fasi: fin, ack, fin, ack, shutdown,
+ vantaggi: affidabile, ordinato, ritrasmissione, dati urgenti, etc.
+ svantaggi: pesantezza, troppo oneroso per alcuni scopi;
+ header: importanza codebit: urg,ack,push,rst,syn,fin;
+ RTT e algoritmi slow start e additive increase,
+ flow control: idea della RWND, silly window, algoritmo di Nagle
+ congestion control: criticità: timeout, 3dup, recovery con SS o AI, RWND e CWND
+- ARQ: concetto di richiesta e risposta automatica, continuos request, sliding windows
+

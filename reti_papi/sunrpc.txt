@@ -1,7 +1,9 @@
 ﻿--Slide SUN RPC--
 
 RPC SUN
-Infrastruttura di supporto SUN che viene inglobata nei processi di interazione remote call. Gestisce lo scambio di messaggi, l'eterogeneità dei sistemi e alcuni errori. Utilizzo semantica at-least-once.
+Infrastruttura di supporto SUN che viene inglobata nei processi di interazione remote con modello di riferimento C/S. Gestisce lo scambio di messaggi, l'eterogeneità dei sistemi e alcuni errori. Utilizzo semantica at-least-once.
+Siamo a livello applicativo per qualsiasi entità in gioco, non ci sono engine di mezzo. Interazioni sincrone e bloccanti (a default).
+Ogni scelta è votata alla PERFORMANCE (es. Server sequenziali)
 
 Implementazione e supporto RPC di Sun: Open Network Computing
 Include XDR, RPCGEN, PortMapper, NFS (Network File System).
@@ -19,7 +21,7 @@ Vincoli RPC SUN
 
 Il gestore di trasporto cliente è un riferimento ad un elemento di supporto: gestisce la comunicazione con il server. Il cliente deve conoscere:
 - l'host remoto dove è in esecuzione il servizio
-- alcune informazioni per invocare il servizio: programma versione e nome dela procedura
+- alcune informazioni per invocare il servizio: programma, versione e nome dela procedura
 Il cliente gestisce gli errori: uso della stampa clnt_perror
 
 Passi Sviluppo SUN RPC
@@ -27,7 +29,13 @@ Passi Sviluppo SUN RPC
 2) generazione automatica stub e funzioni conversione XDR: rpcgen
 3) realizzazione client e server, compilazione e linking
 4) pubblicazione servizi lato server: attivazione portmapper e registrazione
-5) reperirimento dell'endpoint del server tramite portmapper, creando gestore di trasporto client per l'interazione
+5) reperirimento dell'endpoint del server tramite portmapper (sistema di nomi, è un server RPC, l'equivalente del RMIregistry per intenderci), creando gestore di trasporto client per l'interazione
+
+Semantiche possibili
+Strumento molto versatile, in quanot consente al progettista di attuare scelte implemetative a seconda del contesto:
+- may-be (UDP)
+- at-least-once (scelta di default, per evitare di instaurare la connessione TCP, motivo: EFFICIENZA!!!)
+- at-most-once (TCP)
 
 Diversi livelli di astrazione (flessibilità)
 - Utilizzo di servizi RPC standard          (alto)
@@ -130,7 +138,7 @@ Non ci sono indicazioni di tipi XDR solo all'interno dell'implementazione di ogn
 
 La procedura di dispatching contiene i riferimenti alle implementazioni dei servizi di un programma RPC: stesso gestore e stesso protocollo.
 
-Tramite  svc_getargs() si ricavano i parametri per l'esecuzione.
+Tramite svc_getargs() si ricavano i parametri per l'esecuzione.
 Tramite svc_sendreply() si invia la risposta.
 Tramite NULLPROC si verifica se il server è attivo.
 Tramite svcerr_noproc() se manca la procedura richiesta, si gestisce l'errore.

@@ -10,14 +10,14 @@ Multicast Internet: utilizzando indirizzi di classe D è possibile lanciare mess
 --------------------------------------------------------------------------------
 
 ARP (Address Resolution Protocol)
-Protocollo dinamico LOCALE (basato su broadcast) per ricerca dell'indirizzo fisico in un nodo partendo dal suo indirizzo logico.
+Protocollo dinamico LOCALE di livello 2 (basato su broadcast) per ricerca dell'indirizzo fisico in un nodo partendo dal suo indirizzo logico.
 (es. Who has 192.168.1.1? Said 22:cc:dd:44:55:66)
 Partendo dal presupposto che i protocolli devono tenere conto dei costi di esercizio, viene utilizzata una memoria cache (arp table) per mantenere le associazioni {indirizzo IP-indirizzo MAC} e quindi ridurre sovraccarico rete.
 
 Ruoli nel protocollo ARP
-- ARP Attivo: faccio da client, esamino cache altrimenti eseguo broadcast per richiedere indirizzo fisico associato.
+- ARP Attivo: faccio da client, esamino cache altrimenti eseguo broadcast locale per richiedere indirizzo fisico associato.
 - ARP Passivo: faccio da server, se la richiesta riguarda il mio indirizzo 
-rispondo.
+rispondo altrimenti la scarto ma la driver tcp annota IP e MAC del richiedente nella propria ARP table, in modo che successivamente possa evitare di fare la stessa richiesta.
 
 ARP table poisoning: manometto la arp table di un host in modo da redirigere il traffico verso un altro host. 
 
@@ -25,7 +25,7 @@ RARP (Reverse Address Resolution Protocol) (DEPRECATO)
 Attua la ricerca di indirizzo IP per i nodi che non conoscono il proprio indirizzo IP e conoscono solo il proprio indirizzo MAC, ovvero per le macchine diskless (quelle che non hanno memorizzato su disco il loro IP assegnato).
 Posso avere server multipli per RARP, ma nel caso come evito le interferenze?
 - modello dinamico: risponde solo il server primario, gli altri rispondono solo se arriva una seconda richiesta
-- modello statico: il primario risponde immediatamente, gli altri dopo un certo ritardo calcolato
+- modello statico: il primario risponde immediatamente, gli altri dopo un certo ritardo calcolato random
 
 --------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ Funzionamento DHCP (bidding protocol a 4 fasi)
 1) DHCPDiscover: in broadcast si richiede un indirizzo IP
 2) DHCPOffer: i server DHCP rispondono con diverse offerte
 3) DHCPRequest: il client sceglie l'offerta (può mandare in broadcast la scelta)
-4) DHCPACK il server risponde con un ack
+4) DHCPACK: il server risponde con un ack
 5) DHCPLEASE: il client vuole prolungare l'affitto
 6) DHCPRELEASE: il client vuole rilasciare l'indirizzo
 
@@ -76,7 +76,7 @@ Esempi: 69: ttfp (Trivial Transfer File Protocol), 111 RPC Sun.
 
 --------------------------------------------------------------------------------
 
-TCP (Transfer Control Protocol)
+TCP (Transmission Control Protocol)
 Protocollo di livello transporto con semantica at most once.
 La connessione è la quadrupla {host1, port1, host2, port2}.
 
@@ -152,7 +152,7 @@ Fasi TCP
 Come avviene il 3 way handshake?
 1) A invia un segmento SYN a B (con valore iniziale X)
 2) B risponde con un SYN+ACK (con valore iniziale Y)
-3) A conferma la ricezione con un segmento ACK 
+3) A conferma la ricezione con un segmento ACK
 
 Nella 3 way handshake si fa una negoziazione su:
 - seq number
@@ -178,7 +178,7 @@ Come avviene la chiusura?
 3) B termina di inviare tutti i dati che deve e solo alla ricezione dell'ultimo Ack di A, invia finalmente un segmento FIN
 4) A risponde con un ACK (y+1)
 
-Shutdown Output: i dati in uscita terminano tutti in modo controllato e sono tutti consumati, non ci sono dati in ingresso non processati dal pari corrispondente.
+Shutdown Output: i dati in uscita terminano tutti in modo controllato e sono tutti consumati, non ci sono dati in ingresso non processati dal pari corrispondente. Posso ancora inviare ACK al pari per confermare dati arrivati.
 Close: chi chiude attua sia una chiusura in out sia una chiusura in in, rendendo inutili le trasmissioni dei dati che non accetta più in input.
 
 TCP può essere interpretato come una macchina a STATI:
@@ -213,6 +213,8 @@ Flow control
 Algoritmo di Nagle: si ammette di avere pendente senza ack al più un solo messaggio corto. Di solito disabilitato.
 
 Urgent pointer: riferito al seq del pacchetto, il byte a cui punta si potrebbe trovare in un altro segmento ancora da spedire.
+
+?????????????????????????????????? URG SCARTA O LEGGE E MANTIENE?????????????
 
 TCP regime normale: ogni segmento invia info di controllo al pari: seq, ack, window. Il ricevente adegua i parametri di sliding window, timeout tramite RTT. La connessione TCP non usa risorse se non si inviano messaggi (apparte keep-alive)
 

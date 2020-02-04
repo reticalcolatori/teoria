@@ -67,7 +67,7 @@ La distribuzione avviene tramite oggetti che ne hanno responsabilità o autorit�
 Per la risoluzione  dei nomi le richieste dal cliente devono fluire fino al server che può dare la risposta.
 Vi sono 3 fasi:
 1) trovare l'autorità corretta
-2) erificare le autorizzazioni all'operazione
+2) verificare le autorizzazioni all'operazione
 3) eseguire l'operazione
 
 Per limitare i costi: cache, politiche route tra server, creazione di contesti o vicinati tra server, propagazione di conoscenza tra i vicini.
@@ -76,7 +76,7 @@ Per limitare i costi: cache, politiche route tra server, creazione di contesti o
 
 X.500
 
-Definizione CCITT: collezione di sistemi aperti che cooperano per mantenere un database logico di informazioni sgli oggetti del mondo reale. Gli utenti possono leggere o modificare l'informazione solo se hanno i privilegi necessari.
+Definizione CCITT: collezione di sistemi aperti che cooperano per mantenere un database logico di informazioni sugli oggetti del mondo reale. Gli utenti possono leggere o modificare l'informazione solo se hanno i privilegi necessari.
 
 Che cos'è?
 E'un insieme di standard di nomi, articolato e completo.

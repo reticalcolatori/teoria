@@ -4,9 +4,9 @@ In C per la comunicazione e sincronizazzione remota (ma anche locale) si utilizz
 Le socket sono conformi al paradigma dei file system: file descriptor, tabella dei file aperti, open-read-write-close.
 Ovviamente le API sono più estese per il supporto di casi più specifici oppure di casi senza connessione.
 
-Obiettivo: voglio IDEALMNENTE arrivare a lavorare in remoto come se stessi lavorando in locale
+Obiettivo: voglio IDEALMENTE arrivare a lavorare in remoto come se stessi lavorando in locale
 
-Caratteristiche Sockey BSD: 
+Caratteristiche Socket BSD: 
 1) Eterogeneità: comunicazione tra processi di architetture diverse. 
 2) Trasparenza alla locazione fisicadei processi. 
 3) Efficienza: guardo solo alla performance

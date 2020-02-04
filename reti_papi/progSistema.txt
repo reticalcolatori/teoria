@@ -1,22 +1,60 @@
---SLIDE Programmazione di Sistema--
-Sistemi distributi, etereogenei, interconnessi.
-Componenti di sistema: funzionalità software senza le quali l'applicativo non funzionerebbe. Sono ottimizati. Nei sistemi distribuiti tendiamo ad averne di più e coordinati in modo dinamico e veloce.
-Infrastutture software e risorse.
-Prog. Monolitica: programma è sempre lo stesso e contiene tutte le funzionalità necessarie: se attiviamo più programmi avremmo la ripetizione delle funzionalità di supporto.
-Prog. Microservizi: programmi piccoli efficienti e capaci di interagire in modo dinamico. Li coordineremo tra di loro. Necessitano anche di un buon controllo delle situazioni di errore.
-Prog. Imperativa: c/java, usano stati e algoritmi precisi deterministici.
-Prog Dichiarativa: esprimono che cosa voglio fare meno deterministica. LISP, Scala, Prolog.
-Lo stato abbrevia la comunicazione.
-DEVOPS: faccio l'applcativo e determino i servizi di cui ha bisogno.
-Deployment: fase in cui decidiamo come allocare le risorse logiche alle risorse fisiche disponibili (decidendo una configurazione di esecuzione).
-Fasi Statiche: analisi, sviluppo e progetto di algoritmo e codifica nei linguaggi: ho prodotto una forma eseguibile.
-Fasi Dinamiche: Deployment, esecuzioni *efficienti: evitiamo di sprecare risorse. dipende da una comprensione integrale a tutti i livelli*. Noi siamo interessati alla esecuzione.
+﻿--SLIDE Programmazione di Sistema--
+
+Che cosa si intende?
+Intendiamo l'insieme di programmi di supporto che consentono di preparare l’ambiente e forniscono le funzionalità di servizio (componenti di sistema).
+In generale, i componenti di sistema tendono ad eseguire molte volte, molto spesso, e devono essere ottimizzati.
+
+Programmazione tradizionale monolitica
+Il programma è sempre lo stesso e contiene tutte le funzionalità necessarie: se attiviamo più programmi avremmo la ripetizione delle funzionalità di supporto.
+
+Programmazione a microservizi
+Programmi piccoli efficienti e capaci di interagire in modo dinamico coordinandosi tra loro.Questa soluzione unisce l' applicazione con tutto quello che è necessario per supportarla in un unico servizio piccolo (microservice).
+E'una direzione fortemente propagata del filone detto DEVOPS, ossia tutta la tecnologia che mette attenzione sulla parte di supporto e lo considera integrante e da integrare nella definizione della applicazione.
+
+Vi sono due semantiche di programmazione:
+- programmazione imperativa: usano stati e algoritmi risolutivi precisi, deterministici. Usano stato. (C/C++/Java/C#)
+- programmazione dichiarativa: esprimono che cosa voglio fare meno deterministica (LISP, Scala, Prolog)
+
+Deployment: fase in cui decidiamo come allocare le risorse logiche nelle risorse fisiche disponibili (decidendo una configurazione di esecuzione).
+- fasi statiche: analisi, sviluppo e progetto di algoritmo e codifica nei linguaggi: ho prodotto una forma eseguibile.
+- fasi dinamiche: deployment, esecuzioni efficienti: evitiamo di sprecare risorse. dipende da una comprensione integrale a tutti i livelli*. Noi siamo interessati alla esecuzione.
+
 Principi di progetto: Semplicità, efficienza consapevolezza, orientamento ai requisiti.
 Programmi di sistema: semplicità strutture dati, minimizzazione costo configurazione, minimizzazione uso risorse, minimizzazione overhead, capacità inerazione utente, prevenzione errori, etc.
-Strutture dati: 1)Statiche, 2)Limitate (array) 3)Con dati semplici e non troppo astratte 4) Controllo delle risorse allocate 5)prevenzioni errori.
-File: pensati per non stare in memoria. Stream di byte, alcuni sono testo, non trasportabili tra processori perchè risiedono nel disco. Continene la lunghezza non EOF.
-Semplicità degli algoritmi: No controlli ridondanti, poche call: eliminare le funzioni chiamate 1 volta. Eliminare le ripetizioni (usa dello stato). No ricorsione.
-Minimizzazione risorse: Non ripetere operazioni semplici(CPU)(usa stato), malloc/free fuori dai cicli, sempre usare la free., consumare gli stream in modo corretto, verificare input utente e non procedere in caso di errore.
-Filtro: modello che prevede un programma che riceve in ingresso da un input e produce risultati su uno o più output. Il filtro deve consumare tutto lo stream di input. Pipe ridirection.
-C non definisce l’input/output: uso di primitive a livello di S/O. L’input è sempre più complesso dell’output. Stdio.h non ha una semantica di errore. Scanf non sposta i/o (NON CONSUMA STREAM) in caso di errore.
+
+Strutture dati:
+1) Statiche:non ho costi aggiuntivi durante l'esecuzione
+2) Limitate (array): no liste linkate
+3) Con dati semplici e non troppo astratte: no hashlist o hashtable
+4) Controllo delle risorse allocate 
+5) Prevenzioni errori
+
+File
+E' una sequenza di dati, di dimensione grandi a piacere (idealmente infinita) pensati per non stare in memoria. Sono stream di byte, alcuni sono testo (solo caratteri ASCII), sono risorse non trasportabili tra processori perchè risiedono nel disco. 
+Un file non contiene un EOF ma un descrittore della sua lunghezza.
+
+Semplicità degli algoritmi
+- No controlli ridondanti
+- poche call: eliminare le funzioni chiamate 1 volta
+- Eliminare le ripetizioni (usa dello stato)
+- No ricorsione.
+
+Minimizzazione risorse
+- Non ripetere operazioni semplici: usa variabli di stato
+- malloc/free fuori dai cicli
+- sempre usare la free
+- controllare parametri di invocazione per evitare overhead inutile
+- verificare sempre input utente
+- consumare gli stream in modo corretto
+
+Filtro
+Modello che prevede un programma che riceve in ingresso da un input e produce risultati su uno o più output.
+Il filtro DEVE consumare tutto lo stream di input.
+Possibilità di pipe ridirection (|)
+
+I/O in C
+C non definisce l’input/output: uso di primitive a livello di S/O.
+L’input è sempre più complesso dell’output.
+Stdio.h non ha una semantica di errore.
+Scanf non sposta i/o (NON CONSUMA STREAM) in caso di errore.
 
